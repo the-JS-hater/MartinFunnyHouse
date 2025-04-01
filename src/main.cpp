@@ -27,6 +27,7 @@
 void input();
 void updateCamera();
 void updateFocus(int, int);
+void placeMirror(float, float, vec3, vec3);
 
 vec3 cameraPos = {-4, 10, -40};
 vec3 lookingDir = {0, 0, 1};
@@ -88,6 +89,8 @@ void init(void)
 
 	// Load skybox model
 	skybox = LoadModel("../models/skyboxfull.obj");
+
+	// Load mirror model
 
 	// Load ground model
 	vec3 vertices[] =
@@ -255,12 +258,65 @@ void display(void)
 	glBindTexture(GL_TEXTURE_2D, martinTex);
 	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, matMtW.m);
 	DrawModel(martin, program, "in_Position", "in_Normal", "inTexCoord");
+
+	// DRAW MIRROR
+	placeMirror(10.0f, 10.0f, {0.0,10.0,0.0},{0,0,0});
 	
 	printError("display");
 	glutSwapBuffers();
 }
 
-int main(int argc, char *argv[])
+void placeMirror(float width, float height, vec3 position, vec3 rotation)
+{
+	Model *mirror;
+
+	// Load model model
+	vec3 vertices[] =
+	{
+	 vec3(-width / 2.0f,-height / 2.0f,0.0f),
+	 vec3(-width / 2.0f,height / 2.0f,0.0f),
+	 vec3(width / 2.0f,-height / 2.0f,-0.0f),
+	 vec3(width / 2.0f,height / 2.0f,-0.0f)
+	};
+	
+	vec3 vertex_normals[] =
+	{
+	  vec3(1.0f,0.0f,0.0f),
+	  vec3(1.0f,0.0f,0.0f),
+	  vec3(1.0f,0.0f,0.0f),
+	  vec3(1.0f,0.0f,0.0f)
+	};
+	
+	vec2 tex_coords[] =
+	{
+	  vec2(0.0f,0.0f),
+	  vec2(0.0f,20.0f),
+	  vec2(20.0f,0.0f), 
+	  vec2(20.0f,20.0f)
+	};
+	GLuint indices[] =
+	{
+	  0, 1, 2, 1, 3, 2
+	};
+
+	mirror = LoadDataToModel(
+		vertices,
+		vertex_normals,
+		tex_coords,
+		nullptr,
+		indices,
+		sizeof(vertices),
+		sizeof(indices)
+	);
+
+	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
+
+	glBindTexture(GL_TEXTURE_2D, grassTex);
+	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, modelToWorld.m);
+	DrawModel(mirror, program, "in_Position", "in_Normal", "inTexCoord");
+}
+
+	int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
