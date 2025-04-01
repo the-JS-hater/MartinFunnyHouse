@@ -23,9 +23,10 @@ to achieve mirror effects
 - CubeMap mirrors
 
 ## Might do:
-
+    
 - BumpMap mirrors
 - raycasted mirrors
 - Collision detection
+- Noisemap for "splattering" "maskrosor" onto the ground
 - Shadows
 - Truman door (a way to exit the skybox)
