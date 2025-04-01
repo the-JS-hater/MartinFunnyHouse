@@ -52,6 +52,14 @@ unsigned int modelsVertexArrayObjID;
 Model *martin;
 GLuint martinTex;
 
+// Other models
+Model *skybox;
+Model *ground;
+
+// Other textures
+GLuint grassTex;
+GLuint skyTex;
+
 void init(void)
 {
 	glutPassiveMotionFunc(*updateFocus);
@@ -69,9 +77,56 @@ void init(void)
 
 	//NOTE: always do this after loadShaders
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
-
+	
+	// Load Martin
 	LoadTGATextureSimple("../textures/martin.tga", &martinTex);
 	martin = LoadModel("../models/martin.obj");
+	
+	// Load Textures
+	LoadTGATextureSimple("../textures/grass.tga", &grassTex);
+	LoadTGATextureSimple("../textures/SkyBoxFull.tga", &skyTex);
+
+	// Load skybox model
+	skybox = LoadModel("../models/skyboxfull.obj");
+
+	// Load ground model
+	vec3 vertices[] =
+	{
+	 vec3(-kGroundSize,0.0f,-kGroundSize),
+	 vec3(-kGroundSize,0.0f,kGroundSize),
+	 vec3(kGroundSize,-0.0f,-kGroundSize),
+	 vec3(kGroundSize,-0.0f,kGroundSize)
+	};
+	
+	vec3 vertex_normals[] =
+	{
+	  vec3(0.0f,1.0f,0.0f),
+	  vec3(0.0f,1.0f,0.0f),
+	  vec3(0.0f,1.0f,0.0f),
+	  vec3(0.0f,1.0f,0.0f)
+	};
+	
+	vec2 tex_coords[] =
+	{
+	  vec2(0.0f,0.0f),
+	  vec2(0.0f,20.0f),
+	  vec2(20.0f,0.0f), 
+	  vec2(20.0f,20.0f)
+	};
+	GLuint indices[] =
+	{
+	  0, 1, 2, 1, 3, 2
+	};
+
+	ground = LoadDataToModel(
+		vertices,
+		vertex_normals,
+		tex_coords,
+		nullptr,
+		indices,
+		sizeof(vertices),
+		sizeof(indices)
+	);
 }
 
 void input()
@@ -152,19 +207,48 @@ void display(void)
 	input();
 	updateCamera();
 
-	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME);
-	GLfloat theta = t/600;
-
+	// GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME);
+	// GLfloat theta = t/600;
+	
+	// SKYBOX
+	mat4 skyMat = mat3tomat4(mat4tomat3(camera)) * S(10);
+	
+	// GROUND 
+	mat4 groundMtW = T(0,0,0);
+	
 	// MARTIN
+	// TODO: this will be altered later on to move martin around
 	mat4 scaleMartin = S(2.2);
 	mat4 matTrans = T(-3,4.7,-2.4);
 	mat4 matMtW = matTrans * Ry(-M_PI / 2) * scaleMartin;
+	
 	
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glBindVertexArray(modelsVertexArrayObjID);    // Select VAO
 	
+	// DRAW SKYBOX
+	// NOTE: important to draw this first
+	
+	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
+	
+	glBindTexture(GL_TEXTURE_2D, skyTex);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	
+	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, skyMat.m);
+	DrawModel(skybox, program, "in_Position", "in_Normal", "inTexCoord");
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+	// NOTE: must be "turned off" for skybox
 	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
+	
+	// DRAW GROUND
+	glBindTexture(GL_TEXTURE_2D, grassTex);
+	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, groundMtW.m);
+	DrawModel(ground, program, "in_Position", "in_Normal", "inTexCoord");
 	
 	// DRAW MARTIN
 	glUniform1i(glGetUniformLocation(program, "isSky"), 2);
@@ -175,9 +259,6 @@ void display(void)
 	printError("display");
 	glutSwapBuffers();
 }
-
-
-
 
 int main(int argc, char *argv[])
 {
