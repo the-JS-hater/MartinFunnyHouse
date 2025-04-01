@@ -31,7 +31,7 @@ vec3 cameraPos = {-4, 10, -40};
 vec3 lookingDir = {0, 0, 1};
 vec3 focusPoint = {-4, 10, -39};
 vec3 upDir = {0, 1, 0};
-vec2 lastMousePos = {WINDOW_SIZE / 2, WINDOW_SIZE /2};
+vec2 lastMousePos = {WINDOW_W / 2, WINDOW_H /2};
 
 mat4 camera; 
 
@@ -183,8 +183,8 @@ void updateFocus(int x, int y)
 	
 	focusPoint = cameraPos + lookingDir;
 
-	glutWarpPointer(WINDOW_SIZE / 2, WINDOW_SIZE / 2);
-	lastMousePos = (vec2){WINDOW_SIZE / 2, WINDOW_SIZE / 2};
+	glutWarpPointer(WINDOW_W / 2, WINDOW_H / 2);
+	lastMousePos = (vec2){WINDOW_W / 2, WINDOW_H / 2};
 }
 
 void updateCamera()
