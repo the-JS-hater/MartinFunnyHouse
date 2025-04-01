@@ -9,8 +9,10 @@
 #include <stdio.h>
 
 
-#define WINDOW_W 720
-#define WINDOW_H 1280
+#define WINDOW_H 720
+#define WINDOW_W 1280
+#define playerSpeed 0.7
+#define kGroundSize 100.0f
 
 //WARN: DO NOT define before include section 
 #define near 1.0
@@ -19,9 +21,6 @@
 #define left -0.7
 #define top 0.5
 #define bottom -0.5
-#define playerSpeed 0.7
-#define WINDOW_SIZE 600
-#define kGroundSize 100.0f
 
 //function prototypes
 void input();
