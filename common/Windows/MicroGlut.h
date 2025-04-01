@@ -105,6 +105,7 @@ void glutReshapeWindow(int width, int height);
 
 // Modifiers, only supported for glutKeyIsDown
 #define GLUT_KEY_SHIFT			19
+#define GLUT_KEY_LEFT_SHIFT GLUT_KEY_SHIFT
 #define GLUT_KEY_CTRL			20
 #define GLUT_KEY_ALT			21
 
