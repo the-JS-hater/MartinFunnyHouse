@@ -9,8 +9,10 @@
 #include <stdio.h>
 
 
-#define WINDOW_W 720
-#define WINDOW_H 1280
+#define WINDOW_H 720
+#define WINDOW_W 1280
+#define playerSpeed 0.7
+#define kGroundSize 100.0f
 
 //WARN: DO NOT define before include section 
 #define near 1.0
@@ -19,9 +21,6 @@
 #define left -0.7
 #define top 0.5
 #define bottom -0.5
-#define playerSpeed 0.7
-#define WINDOW_SIZE 600
-#define kGroundSize 100.0f
 
 //function prototypes
 void input();
@@ -33,7 +32,7 @@ vec3 cameraPos = {-4, 10, -40};
 vec3 lookingDir = {0, 0, 1};
 vec3 focusPoint = {-4, 10, -39};
 vec3 upDir = {0, 1, 0};
-vec2 lastMousePos = {WINDOW_SIZE / 2, WINDOW_SIZE /2};
+vec2 lastMousePos = {WINDOW_W / 2, WINDOW_H /2};
 
 mat4 camera; 
 
@@ -187,8 +186,8 @@ void updateFocus(int x, int y)
 	
 	focusPoint = cameraPos + lookingDir;
 
-	glutWarpPointer(WINDOW_SIZE / 2, WINDOW_SIZE / 2);
-	lastMousePos = (vec2){WINDOW_SIZE / 2, WINDOW_SIZE / 2};
+	glutWarpPointer(WINDOW_W / 2, WINDOW_H / 2);
+	lastMousePos = (vec2){WINDOW_W / 2, WINDOW_H / 2};
 }
 
 void updateCamera()
