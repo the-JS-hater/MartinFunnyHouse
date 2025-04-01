@@ -98,7 +98,7 @@ void init(void)
 	 vec3(kGroundSize,-0.0f,kGroundSize)
 	};
 	
-	vec3 vertex_normals[] =
+	vec3 vertexNormals[] =
 	{
 	  vec3(0.0f,1.0f,0.0f),
 	  vec3(0.0f,1.0f,0.0f),
@@ -106,7 +106,7 @@ void init(void)
 	  vec3(0.0f,1.0f,0.0f)
 	};
 	
-	vec2 tex_coords[] =
+	vec2 texCoords[] =
 	{
 	  vec2(0.0f,0.0f),
 	  vec2(0.0f,20.0f),
@@ -120,8 +120,8 @@ void init(void)
 
 	ground = LoadDataToModel(
 		vertices,
-		vertex_normals,
-		tex_coords,
+		vertexNormals,
+		texCoords,
 		nullptr,
 		indices,
 		sizeof(vertices),
@@ -236,8 +236,8 @@ void display(void)
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	
-	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, skyMat.m);
-	DrawModel(skybox, program, "in_Position", "in_Normal", "inTexCoord");
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, skyMat.m);
+	DrawModel(skybox, program, "inPosition", "inNormal", "inTexCoord");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -247,14 +247,13 @@ void display(void)
 	
 	// DRAW GROUND
 	glBindTexture(GL_TEXTURE_2D, grassTex);
-	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, groundMtW.m);
-	DrawModel(ground, program, "in_Position", "in_Normal", "inTexCoord");
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, groundMtW.m);
+	DrawModel(ground, program, "inPosition", "inNormal", "inTexCoord");
 	
 	// DRAW MARTIN
-	glUniform1i(glGetUniformLocation(program, "isSky"), 2);
 	glBindTexture(GL_TEXTURE_2D, martinTex);
-	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, matMtW.m);
-	DrawModel(martin, program, "in_Position", "in_Normal", "inTexCoord");
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, matMtW.m);
+	DrawModel(martin, program, "inPosition", "inNormal", "inTexCoord");
 	
 	printError("display");
 	glutSwapBuffers();
