@@ -294,6 +294,7 @@ void updateCamera()
 		focusPoint,
 		upDir
 	);
+
 	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
 }
 
@@ -351,7 +352,7 @@ void display(void)
 	
 	// DRAW MARTIN
 	glBindTexture(GL_TEXTURE_2D, martinTex);
-	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, matMtW.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, matMtW.m);
 	DrawModel(martin, program, "inPosition", "inNormal", "inTexCoord");
 
 	// DRAW MIRROR
