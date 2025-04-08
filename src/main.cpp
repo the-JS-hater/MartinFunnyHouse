@@ -222,9 +222,12 @@ void display(void)
 	GLfloat martinHeight = 2.2;
 	mat4 scaleMartin = S(martinHeight);
 	mat4 matTrans = T(cameraPos.x, cameraPos.y - martinHeight, cameraPos.z);
-	mat4 matMtW = matTrans * Ry(-M_PI / 2) * scaleMartin;
 	
-	
+	vec3 cameraDirXZ = Normalize({lookingDir.x, 0.0f, lookingDir.z});
+	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
+	// +0.6 random ass offset because the model is annoying
+	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
+
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glBindVertexArray(modelsVertexArrayObjID);    // Select VAO
