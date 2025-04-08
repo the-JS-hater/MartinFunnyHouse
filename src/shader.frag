@@ -25,12 +25,12 @@ void main(void)
 
 	/* DIFFUSE LIGHT */
 
-	vec3 diccVec = normalize(vec3((worldToView * modelToWorld * sunPos) - surfacePosition)); 
+	vec3 diccVec = normalize(vec3((worldToView * sunPos) - surfacePosition)); 
 	vec3 diffColor = (max(0.0, dot(normalize(fragNormal), diccVec)) * sunColor);
 	
 	/* SPECULAR LIGHT */
 
-	vec3 specVec = reflect(-normalize(vec3(worldToView * modelToWorld * sunPos) - vec3(surfacePosition)), normalize(fragNormal));
+	vec3 specVec = reflect(-normalize(vec3(worldToView * sunPos) - vec3(surfacePosition)), normalize(fragNormal));
 	float cosPhi = dot(specVec, -vec3(normalize(surfacePosition)));
 	vec3 specColor = sunColor * pow(max(0.0, cosPhi), specularExp);
 	
