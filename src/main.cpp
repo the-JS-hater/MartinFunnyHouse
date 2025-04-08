@@ -16,7 +16,7 @@
 
 //WARN: DO NOT define before include section 
 #define near 1.0
-#define far 160.0
+#define far 280.0
 #define right 0.7
 #define left -0.7
 #define top 0.5

@@ -30,3 +30,4 @@ to achieve mirror effects
 - Noisemap for "splattering" "maskrosor" onto the ground
 - Shadows
 - Truman door (a way to exit the skybox)
+- Learn Blender
