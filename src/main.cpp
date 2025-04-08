@@ -219,8 +219,9 @@ void display(void)
 	
 	// MARTIN
 	// TODO: this will be altered later on to move martin around
-	mat4 scaleMartin = S(2.2);
-	mat4 matTrans = T(cameraPos.x, cameraPos.y, cameraPos.z);
+	GLfloat martinHeight = 2.2;
+	mat4 scaleMartin = S(martinHeight);
+	mat4 matTrans = T(cameraPos.x, cameraPos.y - martinHeight, cameraPos.z);
 	mat4 matMtW = matTrans * Ry(-M_PI / 2) * scaleMartin;
 	
 	
