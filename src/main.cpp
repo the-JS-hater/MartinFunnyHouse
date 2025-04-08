@@ -26,7 +26,7 @@
 void input();
 void updateCamera();
 void updateFocus(int, int);
-void placeMirror(float, float, vec3, vec3);
+void drawMirror(float, float, vec3, vec3);
 void drawModelWrapper(mat4, Model*, GLuint);
 void drawSkybox();
 
@@ -79,15 +79,14 @@ void init(void)
 
 	// Load and compile shader
 	program = loadShaders("shader.vert", "shader.frag");
-	// mirrorProgram = loadShaders("mirror.vert", "mirror.frag");
 	
 	//NOTE: always do this after loadShaders
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
 	
-	// glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "projection"), 1, GL_TRUE, projectionMatrix);
+	mirrorProgram = loadShaders("mirror.vert", "mirror.frag");
+	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "projection"), 1, GL_TRUE, projectionMatrix);
 
 	// Load Martin
-	// glUseProgram(program);
 	LoadTGATextureSimple("../textures/martin.tga", &martinTex);
 	martin = LoadModel("../models/martin.obj");
 	
@@ -251,7 +250,6 @@ void display(void)
 	mat4 groundMtW = T(0,0,0);
 	
 	// MARTIN
-	// TODO: this will be altered later on to move martin around
 	GLfloat martinHeight = 2.2;
 	mat4 scaleMartin = S(martinHeight);
 	mat4 matTrans = T(cameraPos.x, cameraPos.y - martinHeight, cameraPos.z);
@@ -260,6 +258,9 @@ void display(void)
 	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
 	// +0.6 random ass offset because the model is annoying
 	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
+
+	// DRAW WORLD
+	glUseProgram(program);
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -275,13 +276,15 @@ void display(void)
 	drawModelWrapper(matMtW, martin, martinTex);
 
 	// DRAW MIRROR
-	placeMirror(10.0f, 10.0f, {0.0,10.0,0.0},{0,0,0});
+	// glUseProgram(mirrorProgram);
+
+	drawMirror(10.0f, 10.0f, {0.0,10.0,0.0},{0,0,0});
 	
 	printError("display");
 	glutSwapBuffers();
 }
 
-void placeMirror(float width, float height, vec3 position, vec3 rotation)
+void drawMirror(float width, float height, vec3 position, vec3 rotation)
 {
 	Model *mirror;
 
@@ -326,9 +329,13 @@ void placeMirror(float width, float height, vec3 position, vec3 rotation)
 
 	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
 
+	glDisable(GL_CULL_FACE);
+
 	glBindTexture(GL_TEXTURE_2D, grassTex);
-	glUniformMatrix4fv(glGetUniformLocation(program, "ModelToWorld"), 1, GL_TRUE, modelToWorld.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
 	DrawModel(mirror, program, "inPosition", "inNormal", "inTexCoord");
+
+	glEnable(GL_CULL_FACE);
 }
 
 	int main(int argc, char *argv[])

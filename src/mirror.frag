@@ -5,13 +5,13 @@ in vec4 surfacePosition;
 
 out vec4 outColor;
 
-// uniform samplerCube mirrorCube;
-// uniform vec4 cameraPosition;
+uniform samplerCube mirrorCube;
+uniform vec4 cameraPosition;
 
 void main(void)
 {	
-	// vec3 cameraDirection = vec3(normalize(surfacePosition - cameraPosition));
-	// vec3 reflectionDirection = reflect(cameraDirection, vec3(normalize(fragNormal)));
+	vec3 cameraDirection = vec3(normalize(surfacePosition - cameraPosition));
+	vec3 reflectionDirection = reflect(cameraDirection, vec3(normalize(fragNormal)));
 	// outColor = vec4(texture(mirrorCube, reflectionDirection).rgb, 1.0);
 	outColor = vec4(0.0, 0.0, 0.0, 0.0);
 }	
