@@ -141,7 +141,9 @@ void init(void)
 
 void input()
 {
+	#ifndef _WIN32
 	if (glutKeyIsDown(GLUT_KEY_ESC)) glutExit();
+	#endif
 
 	vec3 dir = normalize(focusPoint - cameraPos);
 	vec3 side_dir = normalize(cross(upDir, dir));
