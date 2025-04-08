@@ -37,5 +37,5 @@ void main(void)
 
 	/* FINAL LIGHT */
 
-	outColor = vec4(0.3 * ambLight + 1.0 * diffColor + 0.3 * specColor, 1.0) * texture(texUnit, fragTexCoord);
+	outColor = vec4(0.5 * ambLight + 1.0 * diffColor + 0.3 * specColor, 1.0) * texture(texUnit, fragTexCoord);
 }
