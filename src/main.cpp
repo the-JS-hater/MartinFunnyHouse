@@ -60,102 +60,6 @@ Model *ground;
 GLuint grassTex;
 GLuint skyTex;
 
-// modified version of source code from:
-// https://en.wikipedia.org/wiki/Cube_mapping#Advantages
-vec3 convertUVtoXYZ(int index, float u, float v)
-{
-  // convert range 0 to 1 to -1 to 1
-  float uc = 2.0f * u - 1.0f;
-  float vc = 2.0f * v - 1.0f;
-
-	GLfloat x, y, z;
-  switch (index)
-  {
-    case 0: x =  1.0f; y =    vc; z =   -uc; break;	// POSITIVE X
-    case 1: x = -1.0f; y =    vc; z =    uc; break;	// NEGATIVE X
-    case 2: x =    uc; y =  1.0f; z =   -vc; break;	// POSITIVE Y
-    case 3: x =    uc; y = -1.0f; z =    vc; break;	// NEGATIVE Y
-    case 4: x =    uc; y =    vc; z =  1.0f; break;	// POSITIVE Z
-    case 5: x =   -uc; y =    vc; z = -1.0f; break;	// NEGATIVE Z
-  }
-
-	return vec3(x,y,z);
-}
-
-// modified version of source code from:
-// https://en.wikipedia.org/wiki/Cube_mapping#Advantages
-vec2 convertXYZtoUV(float x, float y, float z, int *index)
-{
-  float absX = fabs(x);
-  float absY = fabs(y);
-  float absZ = fabs(z);
-  
-  int isXPositive = x > 0 ? 1 : 0;
-  int isYPositive = y > 0 ? 1 : 0;
-  int isZPositive = z > 0 ? 1 : 0;
-  
-  GLfloat maxAxis, uc, vc;
-  
-  // POSITIVE X
-  if (isXPositive && absX >= absY && absX >= absZ) {
-    // u (0 to 1) goes from +z to -z
-    // v (0 to 1) goes from -y to +y
-    maxAxis = absX;
-    uc = -z;
-    vc = y;
-    *index = 0;
-  }
-  // NEGATIVE X
-  if (!isXPositive && absX >= absY && absX >= absZ) {
-    // u (0 to 1) goes from -z to +z
-    // v (0 to 1) goes from -y to +y
-    maxAxis = absX;
-    uc = z;
-    vc = y;
-    *index = 1;
-  }
-  // POSITIVE Y
-  if (isYPositive && absY >= absX && absY >= absZ) {
-    // u (0 to 1) goes from -x to +x
-    // v (0 to 1) goes from +z to -z
-    maxAxis = absY;
-    uc = x;
-    vc = -z;
-    *index = 2;
-  }
-  // NEGATIVE Y
-  if (!isYPositive && absY >= absX && absY >= absZ) {
-    // u (0 to 1) goes from -x to +x
-    // v (0 to 1) goes from -z to +z
-    maxAxis = absY;
-    uc = x;
-    vc = z;
-    *index = 3;
-  }
-  // POSITIVE Z
-  if (isZPositive && absZ >= absX && absZ >= absY) {
-    // u (0 to 1) goes from -x to +x
-    // v (0 to 1) goes from -y to +y
-    maxAxis = absZ;
-    uc = x;
-    vc = y;
-    *index = 4;
-  }
-  // NEGATIVE Z
-  if (!isZPositive && absZ >= absX && absZ >= absY) {
-    // u (0 to 1) goes from +x to -x
-    // v (0 to 1) goes from -y to +y
-    maxAxis = absZ;
-    uc = -x;
-    vc = y;
-    *index = 5;
-  }
-	
-	return vec2(
-  	0.5f * (uc / maxAxis + 1.0f),
-  	0.5f * (vc / maxAxis + 1.0f)
-	);
-}
 
 void init(void)
 {
@@ -306,9 +210,6 @@ void display(void)
 	glutHideCursor();
 	input();
 	updateCamera();
-
-	// GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME);
-	// GLfloat theta = t/600;
 	
 	// SKYBOX
 	mat4 skyMat = mat3tomat4(mat4tomat3(camera)) * S(10);
@@ -319,7 +220,7 @@ void display(void)
 	// MARTIN
 	// TODO: this will be altered later on to move martin around
 	mat4 scaleMartin = S(2.2);
-	mat4 matTrans = T(-3,4.7,-2.4);
+	mat4 matTrans = T(cameraPos.x, cameraPos.y, cameraPos.z);
 	mat4 matMtW = matTrans * Ry(-M_PI / 2) * scaleMartin;
 	
 	
