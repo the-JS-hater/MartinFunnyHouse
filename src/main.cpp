@@ -27,6 +27,8 @@ void input();
 void updateCamera();
 void updateFocus(int, int);
 void placeMirror(float, float, vec3, vec3);
+void drawModelWrapper(mat4, Model*, GLuint);
+void drawSkybox();
 
 vec3 cameraPos = {-4, 10, -40};
 vec3 lookingDir = {0, 0, 1};
@@ -208,6 +210,32 @@ void updateCamera()
 	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
 }
 
+void drawModelWrapper(mat4 mdl, Model* model, GLuint tex)
+{
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, mdl.m);
+	DrawModel(model, program, "inPosition", "inNormal", "inTexCoord");
+}
+
+void drawSkybox()
+{
+	mat4 skyMat = mat3tomat4(mat4tomat3(camera)) * S(10);
+	
+	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
+	
+	glBindTexture(GL_TEXTURE_2D, skyTex);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, skyMat.m);
+	DrawModel(skybox, program, "inPosition", "inNormal", "inTexCoord");
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
+}
+
 void display(void)
 {
 	if (glutKeyIsDown(GLUT_KEY_F7)) glutToggleFullScreen();
@@ -216,9 +244,6 @@ void display(void)
 	glutHideCursor();
 	input();
 	updateCamera();
-	
-	// SKYBOX
-	mat4 skyMat = mat3tomat4(mat4tomat3(camera)) * S(10);
 	
 	// GROUND 
 	mat4 groundMtW = T(0,0,0);
@@ -239,32 +264,13 @@ void display(void)
 	glBindVertexArray(modelsVertexArrayObjID);    // Select VAO
 	
 	// DRAW SKYBOX
-	// NOTE: important to draw this first
-	
-	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
-	
-	glBindTexture(GL_TEXTURE_2D, skyTex);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, skyMat.m);
-	DrawModel(skybox, program, "inPosition", "inNormal", "inTexCoord");
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-
-	// NOTE: must be "turned off" for skybox
-	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
+	drawSkybox();
 	
 	// DRAW GROUND
-	glBindTexture(GL_TEXTURE_2D, grassTex);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, groundMtW.m);
-	DrawModel(ground, program, "inPosition", "inNormal", "inTexCoord");
+	drawModelWrapper(groundMtW, ground, grassTex);
 	
 	// DRAW MARTIN
-	glBindTexture(GL_TEXTURE_2D, martinTex);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, matMtW.m);
-	DrawModel(martin, program, "inPosition", "inNormal", "inTexCoord");
+	drawModelWrapper(matMtW, martin, martinTex);
 
 	// DRAW MIRROR
 	placeMirror(10.0f, 10.0f, {0.0,10.0,0.0},{0,0,0});
