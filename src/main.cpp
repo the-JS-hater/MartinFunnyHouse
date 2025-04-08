@@ -142,6 +142,8 @@ void init(void)
 
 void input()
 {
+	if (glutKeyIsDown(GLUT_KEY_ESC)) glutExit();
+
 	vec3 dir = normalize(focusPoint - cameraPos);
 	vec3 side_dir = normalize(cross(upDir, dir));
 	
