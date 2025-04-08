@@ -45,6 +45,8 @@ GLfloat projectionMatrix[] = {
 
 // Reference to shader program
 GLuint program;
+GLuint mirrorProgram;
+
 // vertex array object
 unsigned int modelsVertexArrayObjID;
 
@@ -75,11 +77,15 @@ void init(void)
 
 	// Load and compile shader
 	program = loadShaders("shader.vert", "shader.frag");
-
+	// mirrorProgram = loadShaders("mirror.vert", "mirror.frag");
+	
 	//NOTE: always do this after loadShaders
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
 	
+	// glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "projection"), 1, GL_TRUE, projectionMatrix);
+
 	// Load Martin
+	// glUseProgram(program);
 	LoadTGATextureSimple("../textures/martin.tga", &martinTex);
 	martin = LoadModel("../models/martin.obj");
 	
