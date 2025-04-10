@@ -48,7 +48,7 @@ GLfloat projectionMatrix[] = {
 };
 
 // Cubemap testing files
-char *textureFileName[12] =
+const char *textureFileName[12] =
 	{
 		"../textures/cubemap_test/skyrender0004.tga",
 		"../textures/cubemap_test/skyrender0001.tga",
@@ -57,6 +57,8 @@ char *textureFileName[12] =
 		"../textures/cubemap_test/skyrender0002.tga",
 		"../textures/cubemap_test/skyrender0005.tga",
 };
+
+TextureData t[6];
 
 // Reference to shader program
 GLuint program;
@@ -112,7 +114,7 @@ void init(void)
 	skybox = LoadModel("../models/skyboxfull.obj");
 
 	// Load mirror model
-	// loadCubemap();
+	loadCubemap();
 	loadMirror(10.0, 10.0);
 
 	// Load ground model
@@ -258,8 +260,6 @@ void drawSkybox()
 void loadCubemap() {
 	glGenTextures(1, &cubemap);	  // Generate OpenGL texture IDs
 	glActiveTexture(GL_TEXTURE0); // Just make sure the texture unit match
-
-	TextureData t[6];
 
 	// Note all operations on GL_TEXTURE_CUBE_MAP, not GL_TEXTURE_2D
 
