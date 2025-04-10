@@ -29,6 +29,8 @@ void updateFocus(int, int);
 void drawMirror(float, float, vec3, vec3);
 void drawModelWrapper(mat4, Model*, GLuint);
 void drawSkybox();
+void loadCubemap();
+void loadMirror(float, float);
 
 vec3 cameraPos = {-4, 10, -40};
 vec3 lookingDir = {0, 0, 1};
@@ -45,6 +47,17 @@ GLfloat projectionMatrix[] = {
   0.0f, 0.0f, -1.0f, 0.0f 
 };
 
+// Cubemap testing files
+char *textureFileName[12] =
+	{
+		"../textures/cubemap_test/skyrender0004.tga",
+		"../textures/cubemap_test/skyrender0001.tga",
+		"../textures/cubemap_test/skyrender0003.tga",
+		"../textures/cubemap_test/skyrender0006.tga",
+		"../textures/cubemap_test/skyrender0002.tga",
+		"../textures/cubemap_test/skyrender0005.tga",
+};
+
 // Reference to shader program
 GLuint program;
 GLuint mirrorProgram;
@@ -59,11 +72,12 @@ GLuint martinTex;
 // Other models
 Model *skybox;
 Model *ground;
+Model *mirror;
 
 // Other textures
 GLuint grassTex;
 GLuint skyTex;
-
+GLuint cubemap;
 
 void init(void)
 {
@@ -98,6 +112,8 @@ void init(void)
 	skybox = LoadModel("../models/skyboxfull.obj");
 
 	// Load mirror model
+	// loadCubemap();
+	loadMirror(10.0, 10.0);
 
 	// Load ground model
 	vec3 vertices[] =
@@ -239,6 +255,41 @@ void drawSkybox()
 	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
 }
 
+void loadCubemap() {
+	glGenTextures(1, &cubemap);	  // Generate OpenGL texture IDs
+	glActiveTexture(GL_TEXTURE0); // Just make sure the texture unit match
+
+	TextureData t[6];
+
+	// Note all operations on GL_TEXTURE_CUBE_MAP, not GL_TEXTURE_2D
+
+	// Load texture data and create ordinary texture objects (for skybox)
+	for (int i = 0; i < 6; i++)
+	{
+		LoadTGATexture(textureFileName[i], &t[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
+	// Load to cube map
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, t[0].w, t[0].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[0].imageData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, t[1].w, t[1].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[1].imageData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, t[2].w, t[2].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[2].imageData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, t[3].w, t[3].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[3].imageData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, t[4].w, t[4].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[4].imageData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, t[5].w, t[5].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[5].imageData);
+
+	//	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	// MIPMAPPING
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+}
+
 void display(void)
 {
 	if (glutKeyIsDown(GLUT_KEY_F7)) glutToggleFullScreen();
@@ -278,7 +329,7 @@ void display(void)
 	drawModelWrapper(matMtW, martin, martinTex);
 
 	// DRAW MIRROR
-	// glUseProgram(mirrorProgram);
+	glUseProgram(mirrorProgram);
 
 	drawMirror(10.0f, 10.0f, {0.0,10.0,0.0},{0,0,0});
 	
@@ -286,56 +337,59 @@ void display(void)
 	glutSwapBuffers();
 }
 
-void drawMirror(float width, float height, vec3 position, vec3 rotation)
-{
-	Model *mirror;
-
+void loadMirror(float width, float height) {
 	// Load model model
 	vec3 vertices[] =
-	{
-	 vec3(-width / 2.0f,-height / 2.0f,0.0f),
-	 vec3(-width / 2.0f,height / 2.0f,0.0f),
-	 vec3(width / 2.0f,-height / 2.0f,-0.0f),
-	 vec3(width / 2.0f,height / 2.0f,-0.0f)
-	};
-	
-	vec3 vertex_normals[] =
-	{
-	  vec3(1.0f,0.0f,0.0f),
-	  vec3(1.0f,0.0f,0.0f),
-	  vec3(1.0f,0.0f,0.0f),
-	  vec3(1.0f,0.0f,0.0f)
-	};
-	
-	vec2 tex_coords[] =
-	{
-	  vec2(0.0f,0.0f),
-	  vec2(0.0f,20.0f),
-	  vec2(20.0f,0.0f), 
-	  vec2(20.0f,20.0f)
-	};
+		{
+			vec3(-width / 2.0f, -height / 2.0f, 0.0f),
+			vec3(-width / 2.0f, height / 2.0f, 0.0f),
+			vec3(width / 2.0f, -height / 2.0f, -0.0f),
+			vec3(width / 2.0f, height / 2.0f, -0.0f)};
+
+	vec3 vertexNormals[] =
+		{
+			vec3(1.0f, 0.0f, 0.0f),
+			vec3(1.0f, 0.0f, 0.0f),
+			vec3(1.0f, 0.0f, 0.0f),
+			vec3(1.0f, 0.0f, 0.0f)};
+
+	vec2 texCoords[] =
+		{
+			vec2(0.0f, 0.0f),
+			vec2(0.0f, 20.0f),
+			vec2(20.0f, 0.0f),
+			vec2(20.0f, 20.0f)};
 	GLuint indices[] =
-	{
-	  0, 1, 2, 1, 3, 2
-	};
+		{
+			0, 1, 2, 1, 3, 2};
 
 	mirror = LoadDataToModel(
 		vertices,
-		vertex_normals,
-		tex_coords,
+		vertexNormals,
+		texCoords,
 		nullptr,
 		indices,
 		sizeof(vertices),
-		sizeof(indices)
-	);
+		sizeof(indices));
+}
+
+void drawMirror(float width, float height, vec3 position, vec3 rotation)
+{
 
 	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
 
 	glDisable(GL_CULL_FACE);
 
+	glActiveTexture(GL_TEXTURE0); // Just make sure the texture unit match
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+
+	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
+
 	glBindTexture(GL_TEXTURE_2D, grassTex);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
-	DrawModel(mirror, program, "inPosition", "inNormal", "inTexCoord");
+	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
+	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, camera.m);
+	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), cameraPos.x, cameraPos.y, cameraPos.z);
+	DrawModel(mirror, mirrorProgram, "inPosition", "inNormal", "inTexCoord");
 
 	glEnable(GL_CULL_FACE);
 }
