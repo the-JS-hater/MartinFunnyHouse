@@ -5,7 +5,7 @@
 - Anton Nilsson, antni004@student.liu.se
 - Morgan Nordberg, morno368@student.liu.se
 
-## Bried description
+## Brief description
 
 We will make a scene where a 3D model of Martin Högstedt walks around in a "fun
 house"(inspired by the houses at amusement parks that have bent/warped
