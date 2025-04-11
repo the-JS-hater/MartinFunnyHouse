@@ -93,13 +93,17 @@ void init(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
+	printError("GL inits");
+	
 	// Load and compile shader
-	program = loadShaders("shader.vert", "shader.frag");
+	program = loadShaders("../shaders/shader.vert", "../shaders/shader.frag");
+	
+	printError("init shader");
 	
 	//NOTE: always do this after loadShaders
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
 	
-	mirrorProgram = loadShaders("mirror.vert", "mirror.frag");
+	mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "projection"), 1, GL_TRUE, projectionMatrix);
 
 	// Load Martin
