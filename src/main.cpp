@@ -262,19 +262,21 @@ void drawSkybox()
 }
 
 void loadCubemap() {
-	glGenTextures(1, &cubemap);	  // Generate OpenGL texture IDs
-	glActiveTexture(GL_TEXTURE0); // Just make sure the texture unit match
+	glUseProgram(mirrorProgram);
 
-	// Note all operations on GL_TEXTURE_CUBE_MAP, not GL_TEXTURE_2D
+	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 
-	// Load texture data and create ordinary texture objects (for skybox)
+	glGenTextures(1, &cubemap);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+
 	for (int i = 0; i < 6; i++)
 	{
 		LoadTGATexture(textureFileName[i], &t[i]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
-	// Load to cube map
+
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, t[0].w, t[0].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[0].imageData);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, t[1].w, t[1].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[1].imageData);
@@ -283,13 +285,11 @@ void loadCubemap() {
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, t[4].w, t[4].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[4].imageData);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, t[5].w, t[5].h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[5].imageData);
 
-	//	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	// MIPMAPPING
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
@@ -333,8 +333,6 @@ void display(void)
 	drawModelWrapper(matMtW, martin, martinTex);
 
 	// DRAW MIRROR
-	glUseProgram(mirrorProgram);
-
 	drawMirror(10.0f, 10.0f, {0.0,10.0,0.0},{0,0,0});
 	
 	printError("display");
@@ -384,8 +382,10 @@ void drawMirror(float width, float height, vec3 position, vec3 rotation)
 
 	glDisable(GL_CULL_FACE);
 
-	glActiveTexture(GL_TEXTURE0); // Just make sure the texture unit match
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+
+	glUseProgram(mirrorProgram);
 
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 
