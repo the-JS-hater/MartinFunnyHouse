@@ -22,7 +22,8 @@
 #define top 0.5
 #define bottom -0.5
 
-struct Camera3D {
+struct Camera3D 
+{
 	vec3 pos;
 	vec3 lookingDir;
 	vec3 focusPoint;
@@ -53,11 +54,6 @@ Camera3D camera = Camera3D(
 	{-4, 10, -39}, 
 	{0, 1, 0}
 );
-
-// vec3 cameraPos = {-4, 10, -40};
-// vec3 lookingDir = {0, 0, 1};
-// vec3 focusPoint = {-4, 10, -39};
-// vec3 upDir = {0, 1, 0};
 
 vec2 lastMousePos = {WINDOW_W / 2, WINDOW_H /2};
 
@@ -426,7 +422,6 @@ void drawMirror(vec3 position, vec3 rotation)
 	int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
-	//glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 2);
 	glutInitWindowPosition (10, 10);
 	glutInitWindowSize(WINDOW_W, WINDOW_H);
