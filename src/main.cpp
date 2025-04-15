@@ -426,7 +426,7 @@ void drawMirror(vec3 position, vec3 rotation)
 	int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+	//glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 2);
 	glutInitWindowPosition (10, 10);
 	glutInitWindowSize(WINDOW_W, WINDOW_H);
