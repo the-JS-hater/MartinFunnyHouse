@@ -188,7 +188,7 @@ void input()
 	if (glutKeyIsDown(GLUT_KEY_LEFT_SHIFT)) {
 		cameraPos -= upDir * playerSpeed;
 	};
-	//SPACEBAR
+	//SPACEBAR"
 	if (glutKeyIsDown(' ')) {
 		cameraPos += upDir * playerSpeed;
 	};
@@ -283,8 +283,8 @@ void loadCubemap() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, t[0].width, t[0].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[0].imageData);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, t[1].width, t[1].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[1].imageData);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, t[2].width, t[2].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[2].imageData);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, t[3].width, t[3].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[3].imageData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, t[2].width, t[2].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[2].imageData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, t[3].width, t[3].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[3].imageData);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, t[4].width, t[4].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[4].imageData);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, t[5].width, t[5].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[5].imageData);
 
