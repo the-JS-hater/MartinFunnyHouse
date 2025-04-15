@@ -16,9 +16,7 @@ in vec2 inTexCoord;
 void main(void)
 {	
 	gl_Position = projection * worldToView * modelToWorld * vec4(inPosition, 1.0);
-	fragNormal = mat3(worldToView) * mat3(modelToWorld) * inNormal;
+	fragNormal = mat3(modelToWorld) * inNormal;
 	surfacePosition = modelToWorld * vec4(inPosition, 1.0);
 	fragTexCoord = inTexCoord;
-	// surfacePosition = vec4(0.0,0.0,0.0,0.0);
-	// fragNormal = vec3(0.0,0.0,0.0);
 }

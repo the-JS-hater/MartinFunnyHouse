@@ -14,8 +14,4 @@ void main(void)
 	vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
 	vec3 reflectionDirection = reflect(cameraDirection, normalize(fragNormal));
 	outColor = vec4(texture(mirrorCube, vec3(reflectionDirection.x, -reflectionDirection.y, reflectionDirection.z)).rgb, 1.0);
-	// outColor = vec4(texture(mirrorCube, normalize(vec3(1.0, 1.0, 0.0))).rgb, 0.0);
-	// outColor = vec4(reflectionDirection.xyz, 1.0);
-	// outColor = vec4(cameraDirection.xyz, 1.0);
-	// outColor = vec4(0.0, 1.0, 0.0, 0.0);
 }	
