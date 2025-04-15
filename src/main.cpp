@@ -63,6 +63,7 @@ TextureData t[6];
 // Reference to shader program
 GLuint program;
 GLuint mirrorProgram;
+GLuint skyProgram;
 
 // vertex array object
 unsigned int modelsVertexArrayObjID;
@@ -97,15 +98,16 @@ void init(void)
 	
 	// Load and compile shader
 	program = loadShaders("../shaders/shader.vert", "../shaders/shader.frag");
-	
-	printError("init shader");
-	
-	//NOTE: always do this after loadShaders
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
 	
 	mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "projection"), 1, GL_TRUE, projectionMatrix);
 
+	skyProgram = loadShaders("../shaders/shader.vert", "../shaders/sky.frag");
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_TRUE, projectionMatrix);
+
+	printError("init shader");
+	
 	// Load Martin
 	LoadTGATextureSimple("../textures/martin.tga", &martinTex);
 	martin = LoadModel("../models/martin.obj");
@@ -232,11 +234,13 @@ void updateCamera()
 		upDir
 	);
 
+	glUseProgram(program);
 	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
 }
 
 void drawModelWrapper(mat4 mdl, Model* model, GLuint tex)
 {
+	glUseProgram(program);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, mdl.m);
 	DrawModel(model, program, "inPosition", "inNormal", "inTexCoord");
@@ -244,21 +248,20 @@ void drawModelWrapper(mat4 mdl, Model* model, GLuint tex)
 
 void drawSkybox()
 {
+	glUseProgram(skyProgram);
 	mat4 skyMat = mat3tomat4(mat4tomat3(camera)) * S(10);
 	
-	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
 	
 	glBindTexture(GL_TEXTURE_2D, skyTex);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, skyMat.m);
-	DrawModel(skybox, program, "inPosition", "inNormal", "inTexCoord");
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "modelToWorld"), 1, GL_TRUE, skyMat.m);
+	DrawModel(skybox, skyProgram, "inPosition", "inNormal", "inTexCoord");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-
-	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
 }
 
 void loadCubemap() {
@@ -315,9 +318,6 @@ void display(void)
 	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
 	// +0.6 random ass offset because the model is annoying
 	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
-
-	// DRAW WORLD
-	glUseProgram(program);
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
