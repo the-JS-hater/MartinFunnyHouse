@@ -22,23 +22,46 @@
 #define top 0.5
 #define bottom -0.5
 
+struct Camera3D {
+	vec3 pos;
+	vec3 lookingDir;
+	vec3 focusPoint;
+	vec3 upDir;
+
+	Camera3D(vec3 pos, vec3 lookingDir, vec3 focusPoint, vec3 upDir) {
+		this->pos = pos;
+		this->lookingDir = lookingDir;
+		this->focusPoint = focusPoint;
+		this->upDir = upDir;
+	}
+};
+
 //function prototypes
 void input();
-void updateCamera();
+void updateCamera(Camera3D camera3D);
 void updateFocus(int, int);
-void drawMirror(float, float, vec3, vec3);
+void drawMirror(vec3, vec3);
 void drawModelWrapper(mat4, Model*, GLuint);
 void drawSkybox();
 void loadCubemap();
 void loadMirror(float, float);
+void updateFBO(FBOstruct, Camera3D);
 
-vec3 cameraPos = {-4, 10, -40};
-vec3 lookingDir = {0, 0, 1};
-vec3 focusPoint = {-4, 10, -39};
-vec3 upDir = {0, 1, 0};
+Camera3D camera = Camera3D(
+	{-4, 10, -40},
+	{0, 0, 1}, 
+	{-4, 10, -39}, 
+	{0, 1, 0}
+);
+
+// vec3 cameraPos = {-4, 10, -40};
+// vec3 lookingDir = {0, 0, 1};
+// vec3 focusPoint = {-4, 10, -39};
+// vec3 upDir = {0, 1, 0};
+
 vec2 lastMousePos = {WINDOW_W / 2, WINDOW_H /2};
 
-mat4 camera; 
+mat4 cameraMatrix;
 
 GLfloat projectionMatrix[] = {    
 	2.0f*near/(right-left), 0.0f, (right+left)/(right-left), 0.0f,
@@ -82,10 +105,13 @@ GLuint grassTex;
 GLuint skyTex;
 GLuint cubemap;
 
+// Mirror FBOs
+FBOstruct *mirrorFBO[6];
+
 void init(void)
 {
 	glutPassiveMotionFunc(*updateFocus);
-	updateCamera();
+	updateCamera(camera);
 	
 	// set to rerender in ~60FPS
 	glutRepeatingTimer(16);
@@ -118,6 +144,11 @@ void init(void)
 
 	// Load skybox model
 	skybox = LoadModel("../models/skyboxfull.obj");
+
+	// Initialize mirror framebuffer objects.
+	for (size_t i = 0; i < 6; i++) {
+		mirrorFBO[i] = initFBO(512, 512, 0);
+	}
 
 	// Load mirror model
 	loadCubemap();
@@ -169,30 +200,30 @@ void input()
 	if (glutKeyIsDown(GLUT_KEY_ESC)) glutExit();
 	#endif
 
-	vec3 dir = normalize(focusPoint - cameraPos);
-	vec3 side_dir = normalize(cross(upDir, dir));
+	vec3 dir = normalize(camera.focusPoint - camera.pos);
+	vec3 side_dir = normalize(cross(camera.upDir, dir));
 	
 	if (glutKeyIsDown('w')) {
-		cameraPos += dir * playerSpeed;
+		camera.pos += dir * playerSpeed;
 	}
 	if (glutKeyIsDown('a')) {
-		cameraPos += side_dir * playerSpeed;
+		camera.pos += side_dir * playerSpeed;
 	};
 	if (glutKeyIsDown('s')) {
-		cameraPos -= dir * playerSpeed;
+		camera.pos -= dir * playerSpeed;
 	} 
 	if (glutKeyIsDown('d')) {
-		cameraPos -= side_dir * playerSpeed;
+		camera.pos -= side_dir * playerSpeed;
 	};
 	//LEFT_SHIFT
 	if (glutKeyIsDown(GLUT_KEY_LEFT_SHIFT)) {
-		cameraPos -= upDir * playerSpeed;
+		camera.pos -= camera.upDir * playerSpeed;
 	};
 	//SPACEBAR"
 	if (glutKeyIsDown(' ')) {
-		cameraPos += upDir * playerSpeed;
+		camera.pos += camera.upDir * playerSpeed;
 	};
-	focusPoint = cameraPos + lookingDir;
+	camera.focusPoint = camera.pos + camera.lookingDir;
 }
 
 
@@ -217,25 +248,25 @@ void updateFocus(int x, int y)
 	}
 			
 
-	vec3 side_dir = cross(lookingDir, upDir);
-	lookingDir = normalize(ArbRotate(upDir, theta_x) * ArbRotate(side_dir, theta_y) * lookingDir);
+	vec3 side_dir = cross(camera.lookingDir, camera.upDir);
+	camera.lookingDir = normalize(ArbRotate(camera.upDir, theta_x) * ArbRotate(side_dir, theta_y) * camera.lookingDir);
 	
-	focusPoint = cameraPos + lookingDir;
+	camera.focusPoint = camera.pos + camera.lookingDir;
 
 	glutWarpPointer(WINDOW_W / 2, WINDOW_H / 2);
 	lastMousePos = (vec2){WINDOW_W / 2, WINDOW_H / 2};
 }
 
-void updateCamera()
+void updateCamera(Camera3D camera3D)
 {
-	camera = lookAtv(
-		cameraPos,
-		focusPoint,
-		upDir
+	cameraMatrix = lookAtv(
+		camera3D.pos,
+		camera3D.focusPoint,
+		camera3D.upDir
 	);
 
 	glUseProgram(program);
-	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, camera.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
 }
 
 void drawModelWrapper(mat4 mdl, Model* model, GLuint tex)
@@ -249,7 +280,7 @@ void drawModelWrapper(mat4 mdl, Model* model, GLuint tex)
 void drawSkybox()
 {
 	glUseProgram(skyProgram);
-	mat4 skyMat = mat3tomat4(mat4tomat3(camera)) * S(10);
+	mat4 skyMat = mat3tomat4(mat4tomat3(cameraMatrix)) * S(10);
 	
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
 	
@@ -304,7 +335,7 @@ void display(void)
 
 	glutHideCursor();
 	input();
-	updateCamera();
+	updateCamera(camera);
 	
 	// GROUND 
 	mat4 groundMtW = T(0,0,0);
@@ -312,9 +343,9 @@ void display(void)
 	// MARTIN
 	GLfloat martinHeight = 2.2;
 	mat4 scaleMartin = S(martinHeight);
-	mat4 matTrans = T(cameraPos.x, cameraPos.y - martinHeight, cameraPos.z);
+	mat4 matTrans = T(camera.pos.x, camera.pos.y - martinHeight, camera.pos.z);
 	
-	vec3 cameraDirXZ = Normalize({lookingDir.x, 0.0f, lookingDir.z});
+	vec3 cameraDirXZ = Normalize({camera.lookingDir.x, 0.0f, camera.lookingDir.z});
 	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
 	// +0.6 random ass offset because the model is annoying
 	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
@@ -333,7 +364,7 @@ void display(void)
 	drawModelWrapper(matMtW, martin, martinTex);
 
 	// DRAW MIRROR
-	drawMirror(10.0f, 10.0f, {0.0,10.0,0.0},{0,0,0});
+	drawMirror({0.0,5.0,0.0},{0,0,0});
 	
 	printError("display");
 	glutSwapBuffers();
@@ -355,12 +386,6 @@ void loadMirror(float width, float height) {
 			vec3(1.0f, 0.0f, 0.0f),
 			vec3(1.0f, 0.0f, 0.0f)};
 
-	vec2 texCoords[] =
-		{
-			vec2(0.0f, 0.0f),
-			vec2(0.0f, 20.0f),
-			vec2(20.0f, 0.0f),
-			vec2(20.0f, 20.0f)};
 	GLuint indices[] =
 		{
 			0, 1, 2, 1, 3, 2};
@@ -368,14 +393,14 @@ void loadMirror(float width, float height) {
 	mirror = LoadDataToModel(
 		vertices,
 		vertexNormals,
-		texCoords,
+		nullptr,
 		nullptr,
 		indices,
 		sizeof(vertices),
 		sizeof(indices));
 }
 
-void drawMirror(float width, float height, vec3 position, vec3 rotation)
+void drawMirror(vec3 position, vec3 rotation)
 {
 
 	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
@@ -391,9 +416,9 @@ void drawMirror(float width, float height, vec3 position, vec3 rotation)
 
 	glBindTexture(GL_TEXTURE_2D, grassTex);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
-	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, camera.m);
-	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), cameraPos.x, cameraPos.y, cameraPos.z);
-	DrawModel(mirror, mirrorProgram, "inPosition", "inNormal", "inTexCoord");
+	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
+	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), camera.pos.x, camera.pos.y, camera.pos.z);
+	DrawModel(mirror, mirrorProgram, "inPosition", "inNormal", NULL);
 
 	glEnable(GL_CULL_FACE);
 }
