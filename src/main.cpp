@@ -41,14 +41,21 @@ struct Camera3D
 void input();
 void updateCamera(Camera3D camera3D);
 void updateFocus(int, int);
-void drawMirror(vec3, vec3);
+void drawMirror(vec3, vec3, Camera3D);
 void drawModelWrapper(mat4, Model*, GLuint);
 void drawSkybox();
 void loadCubemap();
 void loadMirror(float, float);
-void updateFBO(FBOstruct, Camera3D);
+void updateFBO(FBOstruct*, Camera3D);
 
-Camera3D camera = Camera3D(
+Camera3D playerCamera = Camera3D(
+	{-4, 10, -40},
+	{0, 0, 1}, 
+	{-4, 10, -39}, 
+	{0, 1, 0}
+);
+
+Camera3D mirrorCamera = Camera3D(
 	{-4, 10, -40},
 	{0, 0, 1}, 
 	{-4, 10, -39}, 
@@ -107,7 +114,7 @@ FBOstruct *mirrorFBO[6];
 void init(void)
 {
 	glutPassiveMotionFunc(*updateFocus);
-	updateCamera(camera);
+	updateCamera(playerCamera);
 	
 	// set to rerender in ~60FPS
 	glutRepeatingTimer(16);
@@ -196,30 +203,30 @@ void input()
 	if (glutKeyIsDown(GLUT_KEY_ESC)) glutExit();
 	#endif
 
-	vec3 dir = normalize(camera.focusPoint - camera.pos);
-	vec3 side_dir = normalize(cross(camera.upDir, dir));
+	vec3 dir = normalize(playerCamera.focusPoint - playerCamera.pos);
+	vec3 side_dir = normalize(cross(playerCamera.upDir, dir));
 	
 	if (glutKeyIsDown('w')) {
-		camera.pos += dir * playerSpeed;
+		playerCamera.pos += dir * playerSpeed;
 	}
 	if (glutKeyIsDown('a')) {
-		camera.pos += side_dir * playerSpeed;
+		playerCamera.pos += side_dir * playerSpeed;
 	};
 	if (glutKeyIsDown('s')) {
-		camera.pos -= dir * playerSpeed;
+		playerCamera.pos -= dir * playerSpeed;
 	} 
 	if (glutKeyIsDown('d')) {
-		camera.pos -= side_dir * playerSpeed;
+		playerCamera.pos -= side_dir * playerSpeed;
 	};
 	//LEFT_SHIFT
 	if (glutKeyIsDown(GLUT_KEY_LEFT_SHIFT)) {
-		camera.pos -= camera.upDir * playerSpeed;
+		playerCamera.pos -= playerCamera.upDir * playerSpeed;
 	};
 	//SPACEBAR"
 	if (glutKeyIsDown(' ')) {
-		camera.pos += camera.upDir * playerSpeed;
+		playerCamera.pos += playerCamera.upDir * playerSpeed;
 	};
-	camera.focusPoint = camera.pos + camera.lookingDir;
+	playerCamera.focusPoint = playerCamera.pos + playerCamera.lookingDir;
 }
 
 
@@ -244,21 +251,21 @@ void updateFocus(int x, int y)
 	}
 			
 
-	vec3 side_dir = cross(camera.lookingDir, camera.upDir);
-	camera.lookingDir = normalize(ArbRotate(camera.upDir, theta_x) * ArbRotate(side_dir, theta_y) * camera.lookingDir);
+	vec3 side_dir = cross(playerCamera.lookingDir, playerCamera.upDir);
+	playerCamera.lookingDir = normalize(ArbRotate(playerCamera.upDir, theta_x) * ArbRotate(side_dir, theta_y) * playerCamera.lookingDir);
 	
-	camera.focusPoint = camera.pos + camera.lookingDir;
+	playerCamera.focusPoint = playerCamera.pos + playerCamera.lookingDir;
 
 	glutWarpPointer(WINDOW_W / 2, WINDOW_H / 2);
 	lastMousePos = (vec2){WINDOW_W / 2, WINDOW_H / 2};
 }
 
-void updateCamera(Camera3D camera3D)
+void updateCamera(Camera3D camera)
 {
 	cameraMatrix = lookAtv(
-		camera3D.pos,
-		camera3D.focusPoint,
-		camera3D.upDir
+		camera.pos,
+		camera.focusPoint,
+		camera.upDir
 	);
 
 	glUseProgram(program);
@@ -314,12 +321,12 @@ void loadCubemap() {
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, t[3].width, t[3].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[3].imageData);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, t[4].width, t[4].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[4].imageData);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, t[5].width, t[5].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, t[5].imageData);
-
+	
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+	
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
+	
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
@@ -331,36 +338,12 @@ void display(void)
 
 	glutHideCursor();
 	input();
-	updateCamera(camera);
-	
-	// GROUND 
-	mat4 groundMtW = T(0,0,0);
-	
-	// MARTIN
-	GLfloat martinHeight = 2.2;
-	mat4 scaleMartin = S(martinHeight);
-	mat4 matTrans = T(camera.pos.x, camera.pos.y - martinHeight, camera.pos.z);
-	
-	vec3 cameraDirXZ = Normalize({camera.lookingDir.x, 0.0f, camera.lookingDir.z});
-	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
-	// +0.6 random ass offset because the model is annoying
-	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
 
-	// clear the screen
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBindVertexArray(modelsVertexArrayObjID);    // Select VAO
-	
-	// DRAW SKYBOX
-	drawSkybox();
-	
-	// DRAW GROUND
-	drawModelWrapper(groundMtW, ground, grassTex);
-	
-	// DRAW MARTIN
-	drawModelWrapper(matMtW, martin, martinTex);
+	// Render mirror perspective
+	updateFBO(mirrorFBO[0], mirrorCamera);
 
-	// DRAW MIRROR
-	drawMirror({0.0,5.0,0.0},{0,0,0});
+	// Render Martin's perspective
+	updateFBO(0, playerCamera);
 	
 	printError("display");
 	glutSwapBuffers();
@@ -396,7 +379,43 @@ void loadMirror(float width, float height) {
 		sizeof(indices));
 }
 
-void drawMirror(vec3 position, vec3 rotation)
+void updateFBO(FBOstruct *fbo, Camera3D camera) {
+	// useFBO(0, 0, 0);
+	useFBO(fbo, 0, 0);
+
+	updateCamera(camera);
+
+	// GROUND
+	mat4 groundMtW = T(0, 0, 0);
+
+	// MARTIN
+	GLfloat martinHeight = 2.2;
+	mat4 scaleMartin = S(martinHeight);
+	mat4 matTrans = T(playerCamera.pos.x, playerCamera.pos.y - martinHeight, playerCamera.pos.z);
+
+	vec3 cameraDirXZ = Normalize({playerCamera.lookingDir.x, 0.0f, playerCamera.lookingDir.z});
+	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
+	// +0.6 random ass offset because the model is annoying
+	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
+
+	// clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glBindVertexArray(modelsVertexArrayObjID); // Select VAO
+
+	// DRAW SKYBOX
+	drawSkybox();
+
+	// DRAW GROUND
+	drawModelWrapper(groundMtW, ground, grassTex);
+
+	// DRAW MARTIN
+	drawModelWrapper(matMtW, martin, martinTex);
+
+	// DRAW MIRROR
+	drawMirror({0.0, 5.0, 0.0}, {0, 0, 0}, camera);
+}
+
+void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 {
 
 	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
