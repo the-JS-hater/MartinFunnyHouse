@@ -295,6 +295,55 @@ FBOstruct *initFBO(int width, int height, int int_method)
 	return fbo;
 }
 
+FBOstruct *initCubemapFBO(int width, int height, int int_method)
+{
+	FBOstruct *fbo = (FBOstruct *)malloc(sizeof(FBOstruct));
+
+	fbo->width = width;
+	fbo->height = height;
+
+	// create objects
+	glGenFramebuffers(1, &fbo->fb); // frame buffer id
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo->fb);
+	glGenTextures(1, &fbo->texid);
+	fprintf(stderr, "%i \n", fbo->texid);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, fbo->texid);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	if (int_method == 0)
+	{
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	}
+	
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, fbo->texid, 0);
+
+	// Renderbuffer
+	// initialize depth renderbuffer
+	glGenRenderbuffers(1, &fbo->rb);
+	glBindRenderbuffer(GL_RENDERBUFFER, fbo->rb);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, fbo->width, fbo->height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, fbo->rb);
+	CHECK_FRAMEBUFFER_STATUS();
+
+	fprintf(stderr, "Framebuffer object %d\n", fbo->fb);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	printError("Part 3");
+	return fbo;
+}
+
 // create FBO, optionally with depth
 // Integer buffer, not suitable for HDR!
 FBOstruct *initFBO2(int width, int height, int int_method, int create_depthimage)

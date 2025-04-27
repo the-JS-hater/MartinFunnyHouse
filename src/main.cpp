@@ -15,6 +15,7 @@
 #define kGroundSize 100.0f
 
 //WARN: DO NOT define before include section 
+// TODO: Define these for mirror 90 deg FOV
 #define near 1.0
 #define far 280.0
 #define right 0.7
@@ -57,8 +58,8 @@ Camera3D playerCamera = Camera3D(
 
 Camera3D mirrorCamera = Camera3D(
 	{-4, 10, -40},
-	{0, 0, 1}, 
-	{-4, 10, -39}, 
+	{0, 0, -1}, 
+	{-4, 10, 39}, 
 	{0, 1, 0}
 );
 
@@ -72,6 +73,13 @@ GLfloat projectionMatrix[] = {
   0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
   0.0f, 0.0f, -1.0f, 0.0f 
 };
+
+// GLfloat fov90Matrix[] = {
+// 	2.0f*near/(right-left), 0.0f, (right+left)/(right-left), 0.0f,
+//   0.0f, 2.0f*near/(top-bottom), (top+bottom)/(top-bottom), 0.0f,
+//   0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
+//   0.0f, 0.0f, -1.0f, 0.0f 
+// };
 
 // Cubemap testing files
 const char *textureFileName[12] =
@@ -150,7 +158,7 @@ void init(void)
 
 	// Initialize mirror framebuffer objects.
 	for (size_t i = 0; i < 6; i++) {
-		mirrorFBO[i] = initFBO(512, 512, 0);
+		mirrorFBO[i] = initCubemapFBO(512, 512, 0);
 	}
 
 	// Load mirror model
@@ -421,15 +429,12 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
 
 	glDisable(GL_CULL_FACE);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
-
 	glUseProgram(mirrorProgram);
-
+	
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, mirrorFBO[0]->texid);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 
-	glBindTexture(GL_TEXTURE_2D, grassTex);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
 	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), camera.pos.x, camera.pos.y, camera.pos.z);
