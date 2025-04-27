@@ -27,13 +27,11 @@ struct Camera3D
 {
 	vec3 pos;
 	vec3 lookingDir;
-	vec3 focusPoint;
 	vec3 upDir;
 
-	Camera3D(vec3 pos, vec3 lookingDir, vec3 focusPoint, vec3 upDir) {
+	Camera3D(vec3 pos, vec3 lookingDir, vec3 upDir) {
 		this->pos = pos;
 		this->lookingDir = lookingDir;
-		this->focusPoint = focusPoint;
 		this->upDir = upDir;
 	}
 };
@@ -51,15 +49,13 @@ void updateFBO(FBOstruct*, Camera3D);
 
 Camera3D playerCamera = Camera3D(
 	{-4, 10, -40},
-	{0, 0, 1}, 
-	{-4, 10, -39}, 
+	{0, 0, 1},
 	{0, 1, 0}
 );
 
 Camera3D mirrorCamera = Camera3D(
 	{-4, 10, -40},
-	{0, 0, -1}, 
-	{-4, 10, 39}, 
+	{0, 0, -1},
 	{0, 1, 0}
 );
 
@@ -211,7 +207,7 @@ void input()
 	if (glutKeyIsDown(GLUT_KEY_ESC)) glutExit();
 	#endif
 
-	vec3 dir = normalize(playerCamera.focusPoint - playerCamera.pos);
+	vec3 dir = normalize(playerCamera.lookingDir);
 	vec3 side_dir = normalize(cross(playerCamera.upDir, dir));
 	
 	if (glutKeyIsDown('w')) {
@@ -234,7 +230,6 @@ void input()
 	if (glutKeyIsDown(' ')) {
 		playerCamera.pos += playerCamera.upDir * playerSpeed;
 	};
-	playerCamera.focusPoint = playerCamera.pos + playerCamera.lookingDir;
 }
 
 
@@ -261,8 +256,6 @@ void updateFocus(int x, int y)
 
 	vec3 side_dir = cross(playerCamera.lookingDir, playerCamera.upDir);
 	playerCamera.lookingDir = normalize(ArbRotate(playerCamera.upDir, theta_x) * ArbRotate(side_dir, theta_y) * playerCamera.lookingDir);
-	
-	playerCamera.focusPoint = playerCamera.pos + playerCamera.lookingDir;
 
 	glutWarpPointer(WINDOW_W / 2, WINDOW_H / 2);
 	lastMousePos = (vec2){WINDOW_W / 2, WINDOW_H / 2};
@@ -272,7 +265,7 @@ void updateCamera(Camera3D camera)
 {
 	cameraMatrix = lookAtv(
 		camera.pos,
-		camera.focusPoint,
+		camera.pos + camera.lookingDir,
 		camera.upDir
 	);
 
