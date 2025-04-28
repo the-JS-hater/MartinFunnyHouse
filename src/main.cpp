@@ -48,18 +48,13 @@ void drawModelWrapper(mat4, Model*, GLuint);
 void drawSkybox();
 void loadCubemap();
 void loadMirror(float, float);
+void updateMirror(FBOstruct*, vec3);
 void updateFBO(FBOstruct*, Camera3D);
 Model* GenerateBumpmap(TextureData *tex);
 
 Camera3D playerCamera = Camera3D(
 	{-4, 10, -40},
 	{0, 0, 1},
-	{0, 1, 0}
-);
-
-Camera3D mirrorCamera = Camera3D(
-	{-4, 10, -40},
-	{0, 0, -1},
 	{0, 1, 0}
 );
 
@@ -355,7 +350,8 @@ void display(void)
 	input();
 
 	// Render mirror perspective
-	updateFBO(mirrorFBO[0], mirrorCamera);
+	updateMirror(mirrorFBO[0], {0.0, 5.0, 0.0});
+	// updateFBO(mirrorFBO[0], );
 
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
@@ -424,8 +420,50 @@ void loadMirror(float width, float height) {
 	);
 }
 
+void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
+	GLenum cubeSides[6] = {
+		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+	};
+	vec3 upVectors[6] = {
+		{0, 1, 0},
+		{0, 1, 0},
+		{0, 0, 1},
+		{0, 0, -1},
+		{0, 1, 0},
+		{0, 1, 0},
+	};
+	vec3 directions[6] = {
+		{-1, 0, 0},
+		{1, 0, 0},
+		{0, 1, 0},
+		{0, -1, 0},
+		{0, 0, -1},
+		{0, 0, 1},
+	};
+
+	for (size_t i = 0; i < 6; i++)
+	{
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cubeSides[i], mirrorFBO->texid, 0);
+		CHECK_FRAMEBUFFER_STATUS();
+
+		// Camera3D()
+
+		Camera3D mirrorCamera = Camera3D(
+			position,
+			directions[i],
+			upVectors[i]
+		);
+
+		updateFBO(mirrorFBO, mirrorCamera);
+	}
+}
+
 void updateFBO(FBOstruct *fbo, Camera3D camera) {
-	// useFBO(0, 0, 0);
 	useFBO(fbo, 0, 0);
 
 	updateCamera(camera);

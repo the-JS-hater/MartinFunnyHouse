@@ -41,6 +41,7 @@ typedef struct
 	int width, height;
 } FBOstruct;
 
+void CHECK_FRAMEBUFFER_STATUS();
 FBOstruct *initFBO(int width, int height, int int_method);
 FBOstruct *initCubemapFBO(int width, int height, int int_method);
 FBOstruct *initFBO2(int width, int height, int int_method, int create_depthimage);
