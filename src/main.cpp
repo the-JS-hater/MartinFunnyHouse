@@ -11,11 +11,14 @@
 
 #define WINDOW_H 720
 #define WINDOW_W 1280
-#define playerSpeed 0.7
-#define kGroundSize 100.0f
+#define PLAYER_SPEED 0.7
+#define GROUND_SIZE 100.0f
+#define SCALE_HEIGHT 8.0f
+#define SCALE_SIZE 1.0f
 
-//WARN: DO NOT define before include section 
 // TODO: Define these for mirror 90 deg FOV
+// Frustum
+
 #define near 1.0
 #define far 280.0
 #define right 0.7
@@ -46,6 +49,7 @@ void drawSkybox();
 void loadCubemap();
 void loadMirror(float, float);
 void updateFBO(FBOstruct*, Camera3D);
+Model* GenerateBumpmap(TextureData *tex);
 
 Camera3D playerCamera = Camera3D(
 	{-4, 10, -40},
@@ -112,6 +116,11 @@ GLuint grassTex;
 GLuint skyTex;
 GLuint cubemap;
 
+// Bumpmap
+GLuint bumpTex;
+TextureData testBumpmap; 
+Model* bumpModel;
+
 // Mirror FBOs
 FBOstruct *mirrorFBO[6];
 
@@ -148,9 +157,11 @@ void init(void)
 	// Load Textures
 	LoadTGATextureSimple("../textures/grass.tga", &grassTex);
 	LoadTGATextureSimple("../textures/SkyBoxFull.tga", &skyTex);
+	LoadTGATextureData("../textures/44-terrain.tga", &testBumpmap);
 
 	// Load skybox model
 	skybox = LoadModel("../models/skyboxfull.obj");
+	bumpModel = GenerateBumpmap(&testBumpmap);
 
 	// Initialize mirror framebuffer objects.
 	for (size_t i = 0; i < 6; i++) {
@@ -159,15 +170,17 @@ void init(void)
 
 	// Load mirror model
 	loadCubemap();
+
 	loadMirror(10.0, 10.0);
+	//mirror->normalArray = bumpModel->normalArray;
 
 	// Load ground model
 	vec3 vertices[] =
 	{
-	 vec3(-kGroundSize,0.0f,-kGroundSize),
-	 vec3(-kGroundSize,0.0f,kGroundSize),
-	 vec3(kGroundSize,-0.0f,-kGroundSize),
-	 vec3(kGroundSize,-0.0f,kGroundSize)
+	 vec3(-GROUND_SIZE,0.0f,-GROUND_SIZE),
+	 vec3(-GROUND_SIZE,0.0f,GROUND_SIZE),
+	 vec3(GROUND_SIZE,-0.0f,-GROUND_SIZE),
+	 vec3(GROUND_SIZE,-0.0f,GROUND_SIZE)
 	};
 	
 	vec3 vertexNormals[] =
@@ -211,24 +224,24 @@ void input()
 	vec3 side_dir = normalize(cross(playerCamera.upDir, dir));
 	
 	if (glutKeyIsDown('w')) {
-		playerCamera.pos += dir * playerSpeed;
+		playerCamera.pos += dir * PLAYER_SPEED;
 	}
 	if (glutKeyIsDown('a')) {
-		playerCamera.pos += side_dir * playerSpeed;
+		playerCamera.pos += side_dir * PLAYER_SPEED;
 	};
 	if (glutKeyIsDown('s')) {
-		playerCamera.pos -= dir * playerSpeed;
+		playerCamera.pos -= dir * PLAYER_SPEED;
 	} 
 	if (glutKeyIsDown('d')) {
-		playerCamera.pos -= side_dir * playerSpeed;
+		playerCamera.pos -= side_dir * PLAYER_SPEED;
 	};
 	//LEFT_SHIFT
 	if (glutKeyIsDown(GLUT_KEY_LEFT_SHIFT)) {
-		playerCamera.pos -= playerCamera.upDir * playerSpeed;
+		playerCamera.pos -= playerCamera.upDir * PLAYER_SPEED;
 	};
 	//SPACEBAR"
 	if (glutKeyIsDown(' ')) {
-		playerCamera.pos += playerCamera.upDir * playerSpeed;
+		playerCamera.pos += playerCamera.upDir * PLAYER_SPEED;
 	};
 }
 
@@ -293,13 +306,14 @@ void drawSkybox()
 	glDisable(GL_CULL_FACE);
 	
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "modelToWorld"), 1, GL_TRUE, skyMat.m);
-	DrawModel(skybox, skyProgram, "inPosition", "inNormal", "inTexCoord");
+	DrawModel(skybox, skyProgram, "inPosition", NULL, "inTexCoord");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 }
 
-void loadCubemap() {
+void loadCubemap() 
+{
 	glUseProgram(mirrorProgram);
 
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
@@ -352,23 +366,52 @@ void display(void)
 
 void loadMirror(float width, float height) {
 	// Load model model
+	
+
+	//TODO: heap allocate. Arrs too big for stack
+
+	//Mirrors are henceforth assumed to be 512x512
+	// vec3 vertices[512 * 512];
+	// vec3 vertexNormals[512 * 512];
+	// GLuint indices[512 * 512 * 2 * 3];
+	// 
+	// float const stepX = width / 512.0f;  
+	// float const stepY = height / 512.0f;  
+
+	// for (size_t i {0}; i < 512 * 512; ++i)
+	// {
+	// 	vertices[i] = (vec3){
+	// 		(float)(i / 512) * stepX,
+	// 		(float)(i % 512) * stepY,
+	// 		0.0f,
+	// 	};
+	// 	vertexNormals[i] = (vec3){1.0f, 0.0f, 0.0f};
+	// }
+	// for (size_t i {0}; i < 511 * 511; ++i)
+	// {
+	// 	indices[i + 0] = i; 
+	// 	indices[i + 1] = i + 1;
+	// 	indices[i + 2] = i + 512;
+	// 	indices[i + 3] = i + 512;
+	// 	indices[i + 4] = i + 1;
+	// 	indices[i + 5] = i + 512 + 1;
+	// }
+
 	vec3 vertices[] =
 		{
 			vec3(-width / 2.0f, -height / 2.0f, 0.0f),
 			vec3(-width / 2.0f, height / 2.0f, 0.0f),
 			vec3(width / 2.0f, -height / 2.0f, -0.0f),
-			vec3(width / 2.0f, height / 2.0f, -0.0f)};
-
+			vec3(width / 2.0f, height / 2.0f, -0.0f)
+		};
 	vec3 vertexNormals[] =
 		{
 			vec3(1.0f, 0.0f, 0.0f),
 			vec3(1.0f, 0.0f, 0.0f),
 			vec3(1.0f, 0.0f, 0.0f),
-			vec3(1.0f, 0.0f, 0.0f)};
-
-	GLuint indices[] =
-		{
-			0, 1, 2, 1, 3, 2};
+			vec3(1.0f, 0.0f, 0.0f)
+		};
+	GLuint indices[] = {0, 1, 2, 1, 3, 2};
 
 	mirror = LoadDataToModel(
 		vertices,
@@ -377,7 +420,8 @@ void loadMirror(float width, float height) {
 		nullptr,
 		indices,
 		sizeof(vertices),
-		sizeof(indices));
+		sizeof(indices)
+	);
 }
 
 void updateFBO(FBOstruct *fbo, Camera3D camera) {
@@ -401,7 +445,7 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBindVertexArray(modelsVertexArrayObjID); // Select VAO
+	glBindVertexArray(modelsVertexArrayObjID); 
 
 	// DRAW SKYBOX
 	drawSkybox();
@@ -426,6 +470,7 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 	
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, mirrorFBO[0]->texid);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
@@ -436,7 +481,72 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 	glEnable(GL_CULL_FACE);
 }
 
-	int main(int argc, char *argv[])
+Model* GenerateBumpmap(TextureData *tex)
+{
+	int vertexCount = tex->width * tex->height;
+	int triangleCount = (tex->width-1) * (tex->height-1) * 2;
+	unsigned int x, z;
+	
+	vec3 *vertexArray = (vec3 *)malloc(sizeof(GLfloat) * 3 * vertexCount);
+	vec3 *normalArray = (vec3 *)malloc(sizeof(GLfloat) * 3 * vertexCount);
+	vec2 *texCoordArray = (vec2 *)malloc(sizeof(GLfloat) * 2 * vertexCount);
+	GLuint *indexArray = (GLuint *) malloc(sizeof(GLuint) * triangleCount*3);
+	
+	for (x = 0; x < tex->width; x++)
+	{
+		for (z = 0; z < tex->height; z++)
+		{
+			// Vertex array
+			vertexArray[(x + z * tex->width)].x = x / SCALE_SIZE;
+			vertexArray[(x + z * tex->width)].y = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / SCALE_HEIGHT;
+			vertexArray[(x + z * tex->width)].z = z / SCALE_SIZE;
+			// Normal vectors
+			if (x == 0 or z == 0 or x == tex->width or z == tex->height)
+			{
+				normalArray[(x + z * tex->width)].x = 0.0;
+				normalArray[(x + z * tex->width)].y = 1.0;
+				normalArray[(x + z * tex->width)].z = 0.0;
+			} 
+			else 
+			{
+				vec3 a = vertexArray[(x + z * tex->width)];
+				vec3 b = vertexArray[((x-1) + z * tex->width)];
+				vec3 c = vertexArray[(x + (z-1) * tex->width)];
+				vec3 norm = CalcNormalVector(b,a,c);
+				normalArray[(x + z * tex->width)] = norm;
+			}
+			// Texture coordinates
+			texCoordArray[(x + z * tex->width)].x = x; // (float)x / tex->width;
+			texCoordArray[(x + z * tex->width)].y = z; // (float)z / tex->height;
+		}
+	}
+	for (x = 0; x < tex->width-1; x++)
+	{
+		for (z = 0; z < tex->height-1; z++)
+		{
+			// Triangle 1
+			indexArray[(x + z * (tex->width-1))*6 + 0] = x + z * tex->width;
+			indexArray[(x + z * (tex->width-1))*6 + 1] = x + (z+1) * tex->width;
+			indexArray[(x + z * (tex->width-1))*6 + 2] = x+1 + z * tex->width;
+			// Triangle 2
+			indexArray[(x + z * (tex->width-1))*6 + 3] = x+1 + z * tex->width;
+			indexArray[(x + z * (tex->width-1))*6 + 4] = x + (z+1) * tex->width;
+			indexArray[(x + z * (tex->width-1))*6 + 5] = x+1 + (z+1) * tex->width;
+		}
+	}
+	Model* model = LoadDataToModel(
+		vertexArray,
+		normalArray,
+		texCoordArray,
+		NULL,
+		indexArray,
+		vertexCount,
+		triangleCount*3
+	);
+	return model;
+}
+
+int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitContextVersion(3, 2);
@@ -444,7 +554,7 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 	glutInitWindowSize(WINDOW_W, WINDOW_H);
 	glutCreateWindow ("Martin doing the funny");
 	glutDisplayFunc(display); 
-	init ();
+	init();
 	glutMainLoop();
 	return 0;
 }
