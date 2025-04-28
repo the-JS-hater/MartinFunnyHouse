@@ -430,20 +430,20 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
 	};
 	vec3 upVectors[6] = {
-		{0, 1, 0},
-		{0, 1, 0},
+		{0, -1, 0},
+		{0, -1, 0},
 		{0, 0, 1},
 		{0, 0, -1},
-		{0, 1, 0},
-		{0, 1, 0},
+		{0, -1, 0},
+		{0, -1, 0},
 	};
 	vec3 directions[6] = {
-		{-1, 0, 0},
 		{1, 0, 0},
+		{-1, 0, 0},
 		{0, 1, 0},
 		{0, -1, 0},
-		{0, 0, -1},
 		{0, 0, 1},
+		{0, 0, -1},
 	};
 
 	for (size_t i = 0; i < 6; i++)
