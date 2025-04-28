@@ -11,7 +11,8 @@ uniform vec3 cameraPosition;
 
 void main(void)
 {
-	// vec3 distortedNormal = vec3(sin(surfacePosition.x), sin(surfacePosition.y), fragNormal.z);
+	//vec3 distortedNormal = vec3(sin(surfacePosition.x), sin(surfacePosition.y), fragNormal.z);
+	vec3 distortedNormal = vec3(fragNormal.x, sin(surfacePosition.y), fragNormal.z);
 	vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
 	vec3 reflectionDirection = reflect(-cameraDirection, normalize(fragNormal));
 	// vec3 reflectionDirection = reflect(cameraDirection, normalize(distortedNormal));

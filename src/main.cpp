@@ -160,7 +160,7 @@ void init(void)
 
 	// Initialize mirror framebuffer objects.
 	for (size_t i = 0; i < 6; i++) {
-		mirrorFBO[i] = initCubemapFBO(512, 512, 0);
+		mirrorFBO[i] = initCubemapFBO(1024, 1024, 0);
 	}
 
 	// Load mirror model
