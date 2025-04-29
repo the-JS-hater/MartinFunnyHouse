@@ -52,7 +52,6 @@ void loadCubemap();
 void loadMirror(float, float);
 void updateMirror(FBOstruct*, vec3);
 void updateFBO(FBOstruct*, Camera3D);
-Model* GenerateBumpmap(TextureData *tex);
 
 vec2 lastMousePos = {WINDOW_W / 2, WINDOW_H /2};
 
@@ -115,11 +114,6 @@ GLuint grassTex;
 GLuint skyTex;
 GLuint cubemap;
 
-// Bumpmap
-GLuint bumpTex;
-TextureData testBumpmap; 
-Model* bumpModel;
-
 // Mirror FBOs
 FBOstruct *mirrorFBO[6];
 
@@ -155,11 +149,9 @@ void init(void)
 	// Load Textures
 	LoadTGATextureSimple("../textures/grass.tga", &grassTex);
 	LoadTGATextureSimple("../textures/SkyBoxFull.tga", &skyTex);
-	LoadTGATextureData("../textures/44-terrain.tga", &testBumpmap);
 
 	// Load skybox model
 	skybox = LoadModel("../models/skyboxfull.obj");
-	bumpModel = GenerateBumpmap(&testBumpmap);
 
 	// Initialize mirror framebuffer objects.
 	for (size_t i = 0; i < 6; i++) {
@@ -364,38 +356,6 @@ void display(void)
 }
 
 void loadMirror(float width, float height) {
-	// Load model model
-	
-
-	//TODO: heap allocate. Arrs too big for stack
-
-	//Mirrors are henceforth assumed to be 512x512
-	// vec3 vertices[512 * 512];
-	// vec3 vertexNormals[512 * 512];
-	// GLuint indices[512 * 512 * 2 * 3];
-	// 
-	// float const stepX = width / 512.0f;  
-	// float const stepY = height / 512.0f;  
-
-	// for (size_t i {0}; i < 512 * 512; ++i)
-	// {
-	// 	vertices[i] = (vec3){
-	// 		(float)(i / 512) * stepX,
-	// 		(float)(i % 512) * stepY,
-	// 		0.0f,
-	// 	};
-	// 	vertexNormals[i] = (vec3){1.0f, 0.0f, 0.0f};
-	// }
-	// for (size_t i {0}; i < 511 * 511; ++i)
-	// {
-	// 	indices[i + 0] = i; 
-	// 	indices[i + 1] = i + 1;
-	// 	indices[i + 2] = i + 512;
-	// 	indices[i + 3] = i + 512;
-	// 	indices[i + 4] = i + 1;
-	// 	indices[i + 5] = i + 512 + 1;
-	// }
-
 	vec3 vertices[] =
 		{
 			vec3(-width / 2.0f, -height / 2.0f, 0.0f),
@@ -526,71 +486,6 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 	DrawModel(mirror, mirrorProgram, "inPosition", "inNormal", NULL);
 
 	glEnable(GL_CULL_FACE);
-}
-
-Model* GenerateBumpmap(TextureData *tex)
-{
-	int vertexCount = tex->width * tex->height;
-	int triangleCount = (tex->width-1) * (tex->height-1) * 2;
-	unsigned int x, z;
-	
-	vec3 *vertexArray = (vec3 *)malloc(sizeof(GLfloat) * 3 * vertexCount);
-	vec3 *normalArray = (vec3 *)malloc(sizeof(GLfloat) * 3 * vertexCount);
-	vec2 *texCoordArray = (vec2 *)malloc(sizeof(GLfloat) * 2 * vertexCount);
-	GLuint *indexArray = (GLuint *) malloc(sizeof(GLuint) * triangleCount*3);
-	
-	for (x = 0; x < tex->width; x++)
-	{
-		for (z = 0; z < tex->height; z++)
-		{
-			// Vertex array
-			vertexArray[(x + z * tex->width)].x = x / SCALE_SIZE;
-			vertexArray[(x + z * tex->width)].y = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / SCALE_HEIGHT;
-			vertexArray[(x + z * tex->width)].z = z / SCALE_SIZE;
-			// Normal vectors
-			if (x == 0 or z == 0 or x == tex->width or z == tex->height)
-			{
-				normalArray[(x + z * tex->width)].x = 0.0;
-				normalArray[(x + z * tex->width)].y = 1.0;
-				normalArray[(x + z * tex->width)].z = 0.0;
-			} 
-			else 
-			{
-				vec3 a = vertexArray[(x + z * tex->width)];
-				vec3 b = vertexArray[((x-1) + z * tex->width)];
-				vec3 c = vertexArray[(x + (z-1) * tex->width)];
-				vec3 norm = CalcNormalVector(b,a,c);
-				normalArray[(x + z * tex->width)] = norm;
-			}
-			// Texture coordinates
-			texCoordArray[(x + z * tex->width)].x = x; // (float)x / tex->width;
-			texCoordArray[(x + z * tex->width)].y = z; // (float)z / tex->height;
-		}
-	}
-	for (x = 0; x < tex->width-1; x++)
-	{
-		for (z = 0; z < tex->height-1; z++)
-		{
-			// Triangle 1
-			indexArray[(x + z * (tex->width-1))*6 + 0] = x + z * tex->width;
-			indexArray[(x + z * (tex->width-1))*6 + 1] = x + (z+1) * tex->width;
-			indexArray[(x + z * (tex->width-1))*6 + 2] = x+1 + z * tex->width;
-			// Triangle 2
-			indexArray[(x + z * (tex->width-1))*6 + 3] = x+1 + z * tex->width;
-			indexArray[(x + z * (tex->width-1))*6 + 4] = x + (z+1) * tex->width;
-			indexArray[(x + z * (tex->width-1))*6 + 5] = x+1 + (z+1) * tex->width;
-		}
-	}
-	Model* model = LoadDataToModel(
-		vertexArray,
-		normalArray,
-		texCoordArray,
-		NULL,
-		indexArray,
-		vertexCount,
-		triangleCount*3
-	);
-	return model;
 }
 
 int main(int argc, char *argv[])
