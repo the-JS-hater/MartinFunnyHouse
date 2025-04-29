@@ -446,7 +446,7 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 	vec3 cameraDirXZ = Normalize({playerCamera.lookingDir.x, 0.0f, playerCamera.lookingDir.z});
 	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
 	// +0.6 random ass offset because the model is annoying
-	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
+	mat4 matMtW = matTrans * Ry(cameraAngle + 1.05) * scaleMartin;
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
 
