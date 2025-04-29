@@ -8,7 +8,6 @@
 #include <math.h>
 #include <stdio.h>
 
-
 #define WINDOW_H 720
 #define WINDOW_W 1280
 #define PLAYER_SPEED 0.7
@@ -31,11 +30,14 @@ struct Camera3D
 	vec3 pos;
 	vec3 lookingDir;
 	vec3 upDir;
+	GLfloat *projectionMatrix;
 
-	Camera3D(vec3 pos, vec3 lookingDir, vec3 upDir) {
+	Camera3D(vec3 pos, vec3 lookingDir, vec3 upDir, GLfloat projectionMatrix[16])
+	{
 		this->pos = pos;
 		this->lookingDir = lookingDir;
 		this->upDir = upDir;
+		this->projectionMatrix = projectionMatrix;
 	}
 };
 
@@ -52,29 +54,31 @@ void updateMirror(FBOstruct*, vec3);
 void updateFBO(FBOstruct*, Camera3D);
 Model* GenerateBumpmap(TextureData *tex);
 
-Camera3D playerCamera = Camera3D(
-	{-4, 10, -40},
-	{0, 0, 1},
-	{0, 1, 0}
-);
-
 vec2 lastMousePos = {WINDOW_W / 2, WINDOW_H /2};
 
 mat4 cameraMatrix;
 
-GLfloat projectionMatrix[] = {    
+GLfloat projectionMatrix[16] = {    
 	2.0f*near/(right-left), 0.0f, (right+left)/(right-left), 0.0f,
   0.0f, 2.0f*near/(top-bottom), (top+bottom)/(top-bottom), 0.0f,
   0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
   0.0f, 0.0f, -1.0f, 0.0f 
 };
 
-// GLfloat fov90Matrix[] = {
-// 	2.0f*near/(right-left), 0.0f, (right+left)/(right-left), 0.0f,
-//   0.0f, 2.0f*near/(top-bottom), (top+bottom)/(top-bottom), 0.0f,
-//   0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
-//   0.0f, 0.0f, -1.0f, 0.0f 
-// };
+GLfloat fov90Matrix[16] = {
+	1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 1.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
+  0.0f, 0.0f, -1.0f, 0.0f 
+};
+
+
+Camera3D playerCamera = Camera3D(
+	{-4, 10, -40},
+	{0, 0, 1},
+	{0, 1, 0},
+	projectionMatrix
+);
 
 // Cubemap testing files
 const char *textureFileName[12] =
@@ -122,7 +126,6 @@ FBOstruct *mirrorFBO[6];
 void init(void)
 {
 	glutPassiveMotionFunc(*updateFocus);
-	updateCamera(playerCamera);
 	
 	// set to rerender in ~60FPS
 	glutRepeatingTimer(16);
@@ -348,11 +351,11 @@ void display(void)
 
 	glutHideCursor();
 	input();
-
+	
 	// Render mirror perspective
 	updateMirror(mirrorFBO[0], {0.0, 5.0, 0.0});
 	// updateFBO(mirrorFBO[0], );
-
+	
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
 	
@@ -446,19 +449,23 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 		{0, 0, -1},
 	};
 
+	
 	for (size_t i = 0; i < 6; i++)
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cubeSides[i], mirrorFBO->texid, 0);
+		printError("hello2");
 		CHECK_FRAMEBUFFER_STATUS();
-
+		printError("hello");
+		
 		// Camera3D()
-
+		
 		Camera3D mirrorCamera = Camera3D(
 			position,
 			directions[i],
-			upVectors[i]
+			upVectors[i],
+			fov90Matrix
 		);
-
+		
 		updateFBO(mirrorFBO, mirrorCamera);
 	}
 }
@@ -480,6 +487,8 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 	float cameraAngle = atan2(cameraDirXZ.x, cameraDirXZ.z);
 	// +0.6 random ass offset because the model is annoying
 	mat4 matMtW = matTrans * Ry(cameraAngle + 0.6) * scaleMartin;
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
