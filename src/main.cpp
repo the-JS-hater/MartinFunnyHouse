@@ -64,6 +64,13 @@ GLfloat projectionMatrix[16] = {
   0.0f, 0.0f, -1.0f, 0.0f 
 };
 
+// GLfloat projectionMatrix[16] = {
+// 	1.0f, 0.0f, 0.0f, 0.0f,
+//   0.0f, 1.0f, 0.0f, 0.0f,
+//   0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
+//   0.0f, 0.0f, -1.0f, 0.0f 
+// };
+
 GLfloat fov90Matrix[16] = {
 	1.0f, 0.0f, 0.0f, 0.0f,
   0.0f, 1.0f, 0.0f, 0.0f,
@@ -346,7 +353,6 @@ void display(void)
 	
 	// Render mirror perspective
 	updateMirror(mirrorFBO[0], {0.0, 5.0, 0.0});
-	// updateFBO(mirrorFBO[0], );
 	
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
@@ -384,6 +390,8 @@ void loadMirror(float width, float height) {
 }
 
 void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
+	useFBO(mirrorFBO, 0, 0);
+
 	GLenum cubeSides[6] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -413,9 +421,7 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 	for (size_t i = 0; i < 6; i++)
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cubeSides[i], mirrorFBO->texid, 0);
-		printError("hello2");
 		CHECK_FRAMEBUFFER_STATUS();
-		printError("hello");
 		
 		// Camera3D()
 		
@@ -432,6 +438,7 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 
 void updateFBO(FBOstruct *fbo, Camera3D camera) {
 	useFBO(fbo, 0, 0);
+	glUseProgram(program);
 
 	updateCamera(camera);
 
@@ -465,6 +472,8 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 
 	// DRAW MIRROR
 	drawMirror({0.0, 5.0, 0.0}, {0, 0, 0}, camera);
+
+	glUseProgram(0);
 }
 
 void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
@@ -477,11 +486,12 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 	
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, mirrorFBO[0]->texid);
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
+	
 	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), camera.pos.x, camera.pos.y, camera.pos.z);
 	DrawModel(mirror, mirrorProgram, "inPosition", "inNormal", NULL);
 

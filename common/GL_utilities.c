@@ -339,8 +339,7 @@ FBOstruct *initCubemapFBO(int width, int height, int int_method)
 
 	fprintf(stderr, "Framebuffer object %d\n", fbo->fb);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	printError("Part 3");
+	
 	return fbo;
 }
 
