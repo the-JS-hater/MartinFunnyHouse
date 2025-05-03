@@ -31,3 +31,5 @@ to achieve mirror effects
 - Shadows
 - Truman door (a way to exit the skybox)
 - Learn Blender
+- Recursive mirrors
+- Parallax corrected reflections
