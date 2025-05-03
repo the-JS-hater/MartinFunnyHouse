@@ -46,8 +46,8 @@ void input();
 void updateCamera(Camera3D camera3D);
 void updateFocus(int, int);
 void drawMirror(vec3, vec3, Camera3D);
-void drawModelWrapper(mat4, Model*, GLuint);
-void drawSkybox();
+void drawModelWrapper(mat4, Model*, GLuint, Camera3D);
+void drawSkybox(Camera3D);
 void loadCubemap();
 void loadMirror(float, float);
 void updateMirror(FBOstruct*, vec3);
@@ -283,20 +283,22 @@ void updateCamera(Camera3D camera)
 	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
 }
 
-void drawModelWrapper(mat4 mdl, Model* model, GLuint tex)
+void drawModelWrapper(mat4 mdl, Model* model, GLuint tex, Camera3D camera)
 {
 	glUseProgram(program);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, mdl.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix); // TEMP:
 	DrawModel(model, program, "inPosition", "inNormal", "inTexCoord");
 }
 
-void drawSkybox()
+void drawSkybox(Camera3D camera)
 {
 	glUseProgram(skyProgram);
 	mat4 skyMat = mat3tomat4(mat4tomat3(cameraMatrix)) * S(10);
 	
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix); // TEMP:
 	
 	glBindTexture(GL_TEXTURE_2D, skyTex);
 	glDisable(GL_DEPTH_TEST);
@@ -438,8 +440,6 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 
 void updateFBO(FBOstruct *fbo, Camera3D camera) {
 	useFBO(fbo, 0, 0);
-	glUseProgram(program);
-
 	updateCamera(camera);
 
 	// GROUND
@@ -455,25 +455,21 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 	// +0.6 random ass offset because the model is annoying
 	mat4 matMtW = matTrans * Ry(cameraAngle + 1.05) * scaleMartin;
 
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
-
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glBindVertexArray(modelsVertexArrayObjID); 
 
 	// DRAW SKYBOX
-	drawSkybox();
+	drawSkybox(camera);
 
 	// DRAW GROUND
-	drawModelWrapper(groundMtW, ground, grassTex);
+	drawModelWrapper(groundMtW, ground, grassTex, camera);
 
 	// DRAW MARTIN
-	drawModelWrapper(matMtW, martin, martinTex);
+	drawModelWrapper(matMtW, martin, martinTex, camera);
 
 	// DRAW MIRROR
 	drawMirror({0.0, 5.0, 0.0}, {0, 0, 0}, camera);
-
-	glUseProgram(0);
 }
 
 void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
@@ -491,7 +487,8 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
-	
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
+
 	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), camera.pos.x, camera.pos.y, camera.pos.z);
 	DrawModel(mirror, mirrorProgram, "inPosition", "inNormal", NULL);
 
