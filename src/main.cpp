@@ -217,7 +217,8 @@ void input()
 	if (glutKeyIsDown(GLUT_KEY_ESC)) glutExit();
 	#endif
 
-	vec3 dir = normalize(playerCamera.lookingDir);
+	vec3 lookingDir = playerCamera.lookingDir;
+	vec3 dir = normalize({lookingDir.x, 0, lookingDir.z});
 	vec3 side_dir = normalize(cross(playerCamera.upDir, dir));
 	
 	if (glutKeyIsDown('w')) {
