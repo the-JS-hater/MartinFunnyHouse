@@ -120,6 +120,7 @@ Model *mirror;
 GLuint grassTex;
 GLuint skyTex;
 GLuint cubemap;
+GLuint bumpmap;
 
 // Mirror FBOs
 FBOstruct *mirrorFBO[6];
@@ -156,6 +157,7 @@ void init(void)
 	// Load Textures
 	LoadTGATextureSimple("../textures/grass.tga", &grassTex);
 	LoadTGATextureSimple("../textures/SkyBoxFull.tga", &skyTex);
+	LoadTGATextureSimple("../textures/44-terrain.tga", &bumpmap);
 
 	// Load skybox model
 	skybox = LoadModel("../models/skyboxfull.obj");
@@ -481,6 +483,10 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 	glBindTexture(GL_TEXTURE_CUBE_MAP, mirrorFBO[0]->texid);
 	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bumpmap);
+	glUniform1i(glGetUniformLocation(mirrorProgram, "bumpMap"), 0);
 
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
