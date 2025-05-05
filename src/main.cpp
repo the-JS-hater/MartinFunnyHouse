@@ -398,35 +398,31 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 	GLenum cubeSides[6] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
 		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
 	};
 	vec3 upVectors[6] = {
 		{0, -1, 0},
 		{0, -1, 0},
-		{0, 0, 1},
+		{0, -1, 0},
+		{0, -1, 0},
 		{0, 0, -1},
-		{0, -1, 0},
-		{0, -1, 0},
+		{0, 0, 1},
 	};
 	vec3 directions[6] = {
 		{1, 0, 0},
 		{-1, 0, 0},
-		{0, 1, 0},
-		{0, -1, 0},
 		{0, 0, 1},
 		{0, 0, -1},
+		{0, 1, 0},
+		{0, -1, 0},
 	};
-
-	
-	for (size_t i = 0; i < 6; i++)
+	for (size_t i = 0; i < 6; ++i)
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cubeSides[i], mirrorFBO->texid, 0);
 		CHECK_FRAMEBUFFER_STATUS();
-		
-		// Camera3D()
 		
 		Camera3D mirrorCamera = Camera3D(
 			position,
@@ -434,9 +430,9 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 			upVectors[i],
 			fov90Matrix
 		);
-		
 		updateFBO(mirrorFBO, mirrorCamera);
 	}
+	printError("update mirror");
 }
 
 void updateFBO(FBOstruct *fbo, Camera3D camera) {
