@@ -27,7 +27,7 @@ Adventures in cumbemapping
 #pause
 - screenshot with martin (looking normal)
 
-== Attempts at GLSL bumpmapping
+== GLSL bumpmapping
 
 #pause
 - screenshots of really fucked up martin
