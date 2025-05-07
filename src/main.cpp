@@ -104,12 +104,67 @@ GLuint program;
 GLuint mirrorProgram;
 GLuint skyProgram;
 
-// vertex array object
-unsigned int modelsVertexArrayObjID;
-
 // Martin data
 Model *martin;
 GLuint martinTex;
+
+// Model limits were found using the python script in calcAABB.py
+// usage of said file:
+// python3 calcAABB.py < models/martin.obj
+GLfloat matinAABB[] = {
+    -0.180505f, -0.217579f, -0.267093f,  // v0
+     0.220834f, -0.217579f, -0.267093f,  // v1
+     0.220834f, -0.217579f,  0.195704f,  // v2
+
+    -0.180505f, -0.217579f, -0.267093f,  // v0
+     0.220834f, -0.217579f,  0.195704f,  // v2
+    -0.180505f, -0.217579f,  0.195704f,  // v3
+
+    // Top face
+    -0.180505f,  1.250039f, -0.267093f,  // v4
+     0.220834f,  1.250039f,  0.195704f,  // v6
+     0.220834f,  1.250039f, -0.267093f,  // v5
+
+    -0.180505f,  1.250039f, -0.267093f,  // v4
+    -0.180505f,  1.250039f,  0.195704f,  // v7
+     0.220834f,  1.250039f,  0.195704f,  // v6
+
+    // Front face
+    -0.180505f, -0.217579f,  0.195704f,  // v3
+     0.220834f, -0.217579f,  0.195704f,  // v2
+     0.220834f,  1.250039f,  0.195704f,  // v6
+
+    -0.180505f, -0.217579f,  0.195704f,  // v3
+     0.220834f,  1.250039f,  0.195704f,  // v6
+    -0.180505f,  1.250039f,  0.195704f,  // v7
+
+    // Back face
+    -0.180505f, -0.217579f, -0.267093f,  // v0
+     0.220834f,  1.250039f, -0.267093f,  // v5
+     0.220834f, -0.217579f, -0.267093f,  // v1
+
+    -0.180505f, -0.217579f, -0.267093f,  // v0
+    -0.180505f,  1.250039f, -0.267093f,  // v4
+     0.220834f,  1.250039f, -0.267093f,  // v5
+
+    // Left face
+    -0.180505f, -0.217579f, -0.267093f,  // v0
+    -0.180505f, -0.217579f,  0.195704f,  // v3
+    -0.180505f,  1.250039f,  0.195704f,  // v7
+
+    -0.180505f, -0.217579f, -0.267093f,  // v0
+    -0.180505f,  1.250039f,  0.195704f,  // v7
+    -0.180505f,  1.250039f, -0.267093f,  // v4
+
+    // Right face
+     0.220834f, -0.217579f, -0.267093f,  // v1
+     0.220834f,  1.250039f,  0.195704f,  // v6
+     0.220834f, -0.217579f,  0.195704f,  // v2
+
+     0.220834f, -0.217579f, -0.267093f,  // v1
+     0.220834f,  1.250039f, -0.267093f,  // v5
+     0.220834f,  1.250039f,  0.195704f,  // v6
+};
 
 // Other models
 Model *skybox;
@@ -456,7 +511,6 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBindVertexArray(modelsVertexArrayObjID); 
 
 	// DRAW SKYBOX
 	drawSkybox(camera);
