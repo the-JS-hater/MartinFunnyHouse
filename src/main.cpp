@@ -106,65 +106,9 @@ GLuint skyProgram;
 
 // Martin data
 Model *martin;
+Model *martinAABB;
 GLuint martinTex;
 
-// Model limits were found using the python script in calcAABB.py
-// usage of said file:
-// python3 calcAABB.py < models/martin.obj
-GLfloat matinAABB[] = {
-    -0.180505f, -0.217579f, -0.267093f,  // v0
-     0.220834f, -0.217579f, -0.267093f,  // v1
-     0.220834f, -0.217579f,  0.195704f,  // v2
-
-    -0.180505f, -0.217579f, -0.267093f,  // v0
-     0.220834f, -0.217579f,  0.195704f,  // v2
-    -0.180505f, -0.217579f,  0.195704f,  // v3
-
-    // Top face
-    -0.180505f,  1.250039f, -0.267093f,  // v4
-     0.220834f,  1.250039f,  0.195704f,  // v6
-     0.220834f,  1.250039f, -0.267093f,  // v5
-
-    -0.180505f,  1.250039f, -0.267093f,  // v4
-    -0.180505f,  1.250039f,  0.195704f,  // v7
-     0.220834f,  1.250039f,  0.195704f,  // v6
-
-    // Front face
-    -0.180505f, -0.217579f,  0.195704f,  // v3
-     0.220834f, -0.217579f,  0.195704f,  // v2
-     0.220834f,  1.250039f,  0.195704f,  // v6
-
-    -0.180505f, -0.217579f,  0.195704f,  // v3
-     0.220834f,  1.250039f,  0.195704f,  // v6
-    -0.180505f,  1.250039f,  0.195704f,  // v7
-
-    // Back face
-    -0.180505f, -0.217579f, -0.267093f,  // v0
-     0.220834f,  1.250039f, -0.267093f,  // v5
-     0.220834f, -0.217579f, -0.267093f,  // v1
-
-    -0.180505f, -0.217579f, -0.267093f,  // v0
-    -0.180505f,  1.250039f, -0.267093f,  // v4
-     0.220834f,  1.250039f, -0.267093f,  // v5
-
-    // Left face
-    -0.180505f, -0.217579f, -0.267093f,  // v0
-    -0.180505f, -0.217579f,  0.195704f,  // v3
-    -0.180505f,  1.250039f,  0.195704f,  // v7
-
-    -0.180505f, -0.217579f, -0.267093f,  // v0
-    -0.180505f,  1.250039f,  0.195704f,  // v7
-    -0.180505f,  1.250039f, -0.267093f,  // v4
-
-    // Right face
-     0.220834f, -0.217579f, -0.267093f,  // v1
-     0.220834f,  1.250039f,  0.195704f,  // v6
-     0.220834f, -0.217579f,  0.195704f,  // v2
-
-     0.220834f, -0.217579f, -0.267093f,  // v1
-     0.220834f,  1.250039f, -0.267093f,  // v5
-     0.220834f,  1.250039f,  0.195704f,  // v6
-};
 
 // Other models
 Model *skybox;
@@ -265,6 +209,63 @@ void init(void)
 		indices,
 		sizeof(vertices),
 		sizeof(indices)
+	);
+
+	// Model limits were found using the python script in calcAABB.py
+	// usage of said file:
+	// python3 calcAABB.py < models/martin.obj
+	vec3 martinAABB_verts[] = 
+	{
+		vec3(-0.180505f, -0.217579f, -0.267093f),  	// v0
+		vec3( 0.220834f, -0.217579f, -0.267093f),  	// v1
+		vec3( 0.220834f, -0.217579f,  0.195704f),  	// v2
+		vec3(-0.180505f, -0.217579f,  0.195704f),  	// v3
+		vec3(-0.180505f,  1.250039f, -0.267093f),  	// v4
+		vec3( 0.220834f,  1.250039f, -0.267093f),  	// v5
+		vec3( 0.220834f,  1.250039f,  0.195704f),  	// v6
+		vec3(-0.180505f,  1.250039f,  0.195704f)   	// v7
+	};
+
+	// not sure why/if normals needed for AABB ?
+	vec3 martinAABB_normals[] =
+	{
+		vec3(0.0f, -1.0f, 0.0f),
+		vec3(0.0f, -1.0f, 0.0f),
+	
+		vec3(0.0f, 1.0f, 0.0f),
+		vec3(0.0f, 1.0f, 0.0f),
+	
+		vec3(0.0f, 0.0f, 1.0f),
+		vec3(0.0f, 0.0f, 1.0f),
+	
+		vec3(0.0f, 0.0f, -1.0f),
+		vec3(0.0f, 0.0f, -1.0f),
+	
+		vec3(-1.0f, 0.0f, 0.0f),
+		vec3(-1.0f, 0.0f, 0.0f),
+	
+		vec3(1.0f, 0.0f, 0.0f),
+		vec3(1.0f, 0.0f, 0.0f)
+	};
+	
+	GLuint martinAABB_indices[] = 
+	{
+		0, 1, 2,  0, 2, 3,       // Bottom
+		4, 6, 5,  4, 7, 6,       // Top
+		3, 2, 6,  3, 6, 7,       // Front
+		0, 5, 1,  0, 4, 5,       // Back
+		0, 3, 7,  0, 7, 4,       // Left
+		1, 6, 2,  1, 5, 6        // Right
+	};
+	
+	martinAABB = LoadDataToModel(
+		martinAABB_verts,
+		martinAABB_normals,
+		nullptr,
+		nullptr,
+		martinAABB_indices,
+		sizeof(martinAABB_verts),
+		sizeof(martinAABB_indices)
 	);
 }
 
@@ -521,6 +522,10 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 	// DRAW MARTIN
 	drawModelWrapper(matMtW, martin, martinTex, camera);
 
+	// DRAW MARTIN AABB 
+	// NOTE: debug purposes only
+	drawModelWrapper(T(3,0,-4) * S(martinHeight), martinAABB, martinTex, camera);
+
 	// DRAW MIRROR
 	drawMirror({0.0, 5.0, 0.0}, {0, 0, 0}, camera);
 }
@@ -530,7 +535,7 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 
 	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
 
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	glUseProgram(mirrorProgram);
 	
 	glActiveTexture(GL_TEXTURE0);
