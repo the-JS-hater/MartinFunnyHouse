@@ -1,5 +1,13 @@
 
 def genAABB(l):
+    coord_map = {
+        "min_x" : None,
+        "min_y" : None,
+        "min_z" : None,
+        "max_x" : None,
+        "max_y" : None,
+        "max_z" : None,
+    }
     min_x = float("inf")
     min_y = float("inf")
     min_z = float("inf")
@@ -8,16 +16,15 @@ def genAABB(l):
     max_z = -float("inf")
     
     for x,y,z in l:
-        min_x = min(x, min_x) 
-        min_y = min(y, min_y)
-        min_z = min(z, min_z)
-        max_x = max(x, max_x) 
-        max_y = max(y, max_y)
-        max_z = max(z, max_z)
+        if x < min_x: min_x = x; coord_map["min_x"] = (x,y,z) 
+        if y < min_y: min_y = x; coord_map["min_y"] = (x,y,z) 
+        if z < min_z: min_z = x; coord_map["min_z"] = (x,y,z) 
+        if x > max_x: max_x = x; coord_map["max_x"] = (x,y,z) 
+        if y > max_y: max_y = x; coord_map["max_y"] = (x,y,z) 
+        if z > max_z: max_z = x; coord_map["max_z"] = (x,y,z) 
     
-    print(f"AABB limits\nmin_x: {min_x}, min_y: {min_y}, min_z: {min_z}")
-    print(f"AABB limits\nmax_x: {max_x}, max_y: {max_y}, max_z: {max_z}")
-    
+    print(coord_map)
+    for key,val in coord_map.items(): print(f"{key} : {val}")
 
 def clean(f):
     return [
