@@ -15,7 +15,6 @@
 #define SCALE_HEIGHT 8.0f
 #define SCALE_SIZE 1.0f
 
-// TODO: Define these for mirror 90 deg FOV
 // Frustum
 
 #define near 1.0
@@ -41,17 +40,24 @@ struct Camera3D
 	}
 };
 
+struct Mirror
+{
+	vec3 pos;
+	vec3 rotation;
+	FBOstruct* fbo[2];
+};
+
 //function prototypes
 void input();
-void updateCamera(Camera3D camera3D);
+void updateCamera(Camera3D&);
 void updateFocus(int, int);
-void drawMirror(vec3, vec3, Camera3D);
-void drawModelWrapper(mat4, Model*, GLuint, Camera3D);
-void drawSkybox(Camera3D);
-void loadCubemap();
+void drawMirror(Mirror&, Camera3D&);
+void drawModelWrapper(mat4, Model*, GLuint, Camera3D&);
+void drawSkybox(Camera3D&);
+void loadCubemap(GLuint&);
 void loadMirror(float, float);
-void updateMirror(FBOstruct*, vec3);
-void updateFBO(FBOstruct*, Camera3D);
+void updateMirror(Mirror&);
+void updateFBO(FBOstruct*, Camera3D&);
 
 vec2 lastMousePos = {WINDOW_W / 2, WINDOW_H /2};
 
@@ -64,13 +70,6 @@ GLfloat projectionMatrix[16] = {
   0.0f, 0.0f, -1.0f, 0.0f 
 };
 
-// GLfloat projectionMatrix[16] = {
-// 	1.0f, 0.0f, 0.0f, 0.0f,
-//   0.0f, 1.0f, 0.0f, 0.0f,
-//   0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
-//   0.0f, 0.0f, -1.0f, 0.0f 
-// };
-
 GLfloat fov90Matrix[16] = {
 	1.0f, 0.0f, 0.0f, 0.0f,
   0.0f, 1.0f, 0.0f, 0.0f,
@@ -80,7 +79,7 @@ GLfloat fov90Matrix[16] = {
 
 
 Camera3D playerCamera = Camera3D(
-	{-4, 10, -40},
+	{0, 5, 0},
 	{0, 0, 1},
 	{0, 1, 0},
 	projectionMatrix
@@ -114,7 +113,7 @@ GLuint martinTex;
 // Other models
 Model *skybox;
 Model *ground;
-Model *mirror;
+Model *mirrorModel;
 
 // Other textures
 GLuint grassTex;
@@ -122,8 +121,9 @@ GLuint skyTex;
 GLuint cubemap;
 GLuint bumpmap;
 
-// Mirror FBOs
-FBOstruct *mirrorFBO[6];
+// Mirrors
+Mirror mirrors[2];
+int currentFBO = 0;
 
 void init(void)
 {
@@ -163,12 +163,18 @@ void init(void)
 	skybox = LoadModel("../models/skyboxfull.obj");
 
 	// Initialize mirror framebuffer objects.
-	for (size_t i = 0; i < 6; i++) {
-		mirrorFBO[i] = initCubemapFBO(1024, 1024, 0);
+	for (size_t i = 0; i < 2; i++) {
+		mirrors[i].fbo[0] = initCubemapFBO(2048, 2048, 0);
+		mirrors[i].fbo[1] = initCubemapFBO(2048, 2048, 0);
 	}
 
+	// Set mirror positions and rotations.
+	mirrors[0].pos = {0.0, 5.0, 20.0};
+	mirrors[0].rotation = {0.0, 0.0, 0.0};
+	mirrors[1].pos = {0.0, 5.0, -20.0};
+	mirrors[1].rotation = {0.0, 0.0, 0.0};
+
 	// Load mirror model
-	loadCubemap();
 
 	loadMirror(10.0, 10.0);
 	//mirror->normalArray = bumpModel->normalArray;
@@ -274,7 +280,7 @@ void updateFocus(int x, int y)
 	lastMousePos = (vec2){WINDOW_W / 2, WINDOW_H / 2};
 }
 
-void updateCamera(Camera3D camera)
+void updateCamera(Camera3D &camera)
 {
 	cameraMatrix = lookAtv(
 		camera.pos,
@@ -286,22 +292,22 @@ void updateCamera(Camera3D camera)
 	glUniformMatrix4fv(glGetUniformLocation(program, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
 }
 
-void drawModelWrapper(mat4 mdl, Model* model, GLuint tex, Camera3D camera)
+void drawModelWrapper(mat4 mdl, Model* model, GLuint tex, Camera3D &camera)
 {
 	glUseProgram(program);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, mdl.m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix); // TEMP:
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
 	DrawModel(model, program, "inPosition", "inNormal", "inTexCoord");
 }
 
-void drawSkybox(Camera3D camera)
+void drawSkybox(Camera3D &camera)
 {
 	glUseProgram(skyProgram);
 	mat4 skyMat = mat3tomat4(mat4tomat3(cameraMatrix)) * S(10);
 	
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix); // TEMP:
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
 	
 	glBindTexture(GL_TEXTURE_2D, skyTex);
 	glDisable(GL_DEPTH_TEST);
@@ -314,7 +320,7 @@ void drawSkybox(Camera3D camera)
 	glEnable(GL_CULL_FACE);
 }
 
-void loadCubemap() 
+void loadCubemap(GLuint &cubemap)
 {
 	glUseProgram(mirrorProgram);
 
@@ -357,7 +363,12 @@ void display(void)
 	input();
 	
 	// Render mirror perspective
-	updateMirror(mirrorFBO[0], {0.0, 5.0, 0.0});
+	for (size_t i = 0; i < 2; i++)
+	{
+		updateMirror(mirrors[i]);
+	}
+	currentFBO = (currentFBO + 1) % 2;
+	// ++currentFBO %= 2;
 	
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
@@ -383,7 +394,7 @@ void loadMirror(float width, float height) {
 		};
 	GLuint indices[] = {0, 1, 2, 1, 3, 2};
 
-	mirror = LoadDataToModel(
+	mirrorModel = LoadDataToModel(
 		vertices,
 		vertexNormals,
 		nullptr,
@@ -394,8 +405,8 @@ void loadMirror(float width, float height) {
 	);
 }
 
-void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
-	useFBO(mirrorFBO, 0, 0);
+void updateMirror(Mirror &mirror) {
+	useFBO(mirror.fbo[currentFBO], 0, 0);
 
 	GLenum cubeSides[6] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -423,21 +434,21 @@ void updateMirror(FBOstruct *mirrorFBO, vec3 position) {
 	};
 	for (size_t i = 0; i < 6; ++i)
 	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cubeSides[i], mirrorFBO->texid, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cubeSides[i], mirror.fbo[currentFBO]->texid, 0);
 		CHECK_FRAMEBUFFER_STATUS();
 		
 		Camera3D mirrorCamera = Camera3D(
-			position,
+			mirror.pos,
 			directions[i],
 			upVectors[i],
 			fov90Matrix
 		);
-		updateFBO(mirrorFBO, mirrorCamera);
+		updateFBO(mirror.fbo[currentFBO], mirrorCamera);
 	}
 	printError("update mirror");
 }
 
-void updateFBO(FBOstruct *fbo, Camera3D camera) {
+void updateFBO(FBOstruct *fbo, Camera3D &camera) {
 	useFBO(fbo, 0, 0);
 	updateCamera(camera);
 
@@ -468,19 +479,27 @@ void updateFBO(FBOstruct *fbo, Camera3D camera) {
 	drawModelWrapper(matMtW, martin, martinTex, camera);
 
 	// DRAW MIRROR
-	drawMirror({0.0, 5.0, 0.0}, {0, 0, 0}, camera);
+	for (size_t i = 0; i < 2; i++)
+	{
+		drawMirror(mirrors[i], camera);
+	}
 }
 
-void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
+void drawMirror(Mirror &mirror, Camera3D &camera)
 {
 
-	mat4 modelToWorld = T(position.x, position.y, position.z) * Rz(rotation.z) * Rx(rotation.x) * Ry(rotation.y);
+	mat4 modelToWorld = IdentityMatrix();
+	modelToWorld = modelToWorld * T(mirror.pos.x, mirror.pos.y, mirror.pos.z);
+	modelToWorld = modelToWorld * Rz(mirror.rotation.z);
+	modelToWorld = modelToWorld * Rx(mirror.rotation.x);
+	modelToWorld = modelToWorld * Ry(mirror.rotation.y);
 
 	glDisable(GL_CULL_FACE);
 	glUseProgram(mirrorProgram);
 	
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, mirrorFBO[0]->texid);
+	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[currentFBO]->texid);
 	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 
@@ -490,10 +509,10 @@ void drawMirror(vec3 position, vec3 rotation, Camera3D camera)
 
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, playerCamera.projectionMatrix);
 
 	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), camera.pos.x, camera.pos.y, camera.pos.z);
-	DrawModel(mirror, mirrorProgram, "inPosition", "inNormal", NULL);
+	DrawModel(mirrorModel, mirrorProgram, "inPosition", "inNormal", NULL);
 
 	glEnable(GL_CULL_FACE);
 }
