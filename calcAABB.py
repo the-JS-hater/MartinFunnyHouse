@@ -1,3 +1,4 @@
+# Usage: python3 calcAABB.py < models/some_model.obj
 
 def genAABB(l):
     coord_map = {

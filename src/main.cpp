@@ -218,60 +218,79 @@ void init(void)
 	);
 
 	// Model limits were found using the python script in calcAABB.py
-	// usage of said file:
-	// python3 calcAABB.py < models/martin.obj
-	vec3 martinAABB_verts[] = 
-	{
-		vec3(-0.180505f, -0.217579f, -0.267093f),  	// v0
-		vec3( 0.220834f, -0.217579f, -0.267093f),  	// v1
-		vec3( 0.220834f, -0.217579f,  0.195704f),  	// v2
-		vec3(-0.180505f, -0.217579f,  0.195704f),  	// v3
-		vec3(-0.180505f,  1.250039f, -0.267093f),  	// v4
-		vec3( 0.220834f,  1.250039f, -0.267093f),  	// v5
-		vec3( 0.220834f,  1.250039f,  0.195704f),  	// v6
-		vec3(-0.180505f,  1.250039f,  0.195704f)   	// v7
-	};
+	GLfloat minX = -0.180505;
+	GLfloat minY = -0.050192;
+	GLfloat minZ = -0.168232;
+	GLfloat maxX = 0.220834;
+	GLfloat maxY = 0.778779;
+	GLfloat maxZ = 0.132994;
 
-	// not sure why/if normals needed for AABB ?
-	vec3 martinAABB_normals[] =
+	vec3 aabb_verts[] = 
 	{
-		vec3(0.0f, -1.0f, 0.0f),
-		vec3(0.0f, -1.0f, 0.0f),
-	
-		vec3(0.0f, 1.0f, 0.0f),
-		vec3(0.0f, 1.0f, 0.0f),
-	
-		vec3(0.0f, 0.0f, 1.0f),
-		vec3(0.0f, 0.0f, 1.0f),
-	
-		vec3(0.0f, 0.0f, -1.0f),
-		vec3(0.0f, 0.0f, -1.0f),
-	
-		vec3(-1.0f, 0.0f, 0.0f),
-		vec3(-1.0f, 0.0f, 0.0f),
-	
-		vec3(1.0f, 0.0f, 0.0f),
-		vec3(1.0f, 0.0f, 0.0f)
+	  // Bottom face Y
+	  vec3(minX, minY, minZ), // 0
+	  vec3(maxX, minY, minZ), // 1
+	  vec3(maxX, minY, maxZ), // 2
+	  vec3(minX, minY, maxZ), // 3
+	  // Top face Y
+	  vec3(minX, maxY, minZ), // 4
+	  vec3(maxX, maxY, minZ), // 5
+	  vec3(maxX, maxY, maxZ), // 6
+	  vec3(minX, maxY, maxZ)  // 7
 	};
 	
-	GLuint martinAABB_indices[] = 
+	GLuint aabb_indices[] = 
 	{
-		0, 1, 2,  0, 2, 3,       // Bottom
-		4, 6, 5,  4, 7, 6,       // Top
-		3, 2, 6,  3, 6, 7,       // Front
-		0, 5, 1,  0, 4, 5,       // Back
-		0, 3, 7,  0, 7, 4,       // Left
-		1, 6, 2,  1, 5, 6        // Right
+	  // Bottom face 
+	  0, 2, 1,
+	  0, 3, 2,
+	  // Top face
+	  4, 5, 6,
+	  4, 6, 7,
+	  // Front face 
+	  3, 6, 2,
+	  3, 7, 6,
+	  // Back face
+	  0, 1, 5,
+	  0, 5, 4,
+	  // Left face 
+	  0, 4, 7,
+	  0, 7, 3,
+	  // Right face 
+	  1, 2, 6,
+	  1, 6, 5
+	};
+	
+	vec3 aabb_normals[] = 
+	{
+	  // Bottom face
+	  {0.0f, -1.0f, 0.0f},
+	  {0.0f, -1.0f, 0.0f},
+	  // Top face
+	  {0.0f, 1.0f, 0.0f},
+	  {0.0f, 1.0f, 0.0f},
+	  // Front face
+	  {0.0f, 0.0f, 1.0f},
+	  {0.0f, 0.0f, 1.0f},
+	  // Back face
+	  {0.0f, 0.0f, -1.0f},
+	  {0.0f, 0.0f, -1.0f},
+	  // Left face
+	  {-1.0f, 0.0f, 0.0f},
+	  {-1.0f, 0.0f, 0.0f},
+	  // Right face
+	  {1.0f, 0.0f, 0.0f},
+	  {1.0f, 0.0f, 0.0f}
 	};
 	
 	martinAABB = LoadDataToModel(
-		martinAABB_verts,
-		martinAABB_normals,
+		aabb_verts,
+		aabb_normals,
 		nullptr,
 		nullptr,
-		martinAABB_indices,
-		sizeof(martinAABB_verts),
-		sizeof(martinAABB_indices)
+		aabb_indices,
+		sizeof(aabb_verts),
+		sizeof(aabb_indices)
 	);
 }
 
@@ -353,7 +372,7 @@ void drawModelWrapper(mat4 mdl, Model* model, GLuint tex, Camera3D &camera)
 	glUseProgram(program);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelToWorld"), 1, GL_TRUE, mdl.m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix); 
 	DrawModel(model, program, "inPosition", "inNormal", "inTexCoord");
 }
 
@@ -363,7 +382,7 @@ void drawSkybox(Camera3D &camera)
 	mat4 skyMat = mat3tomat4(mat4tomat3(cameraMatrix)) * S(10);
 	
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "worldToView"), 1, GL_TRUE, IdentityMatrix().m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, camera.projectionMatrix); 
 	
 	glBindTexture(GL_TEXTURE_2D, skyTex);
 	glDisable(GL_DEPTH_TEST);
@@ -372,8 +391,8 @@ void drawSkybox(Camera3D &camera)
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "modelToWorld"), 1, GL_TRUE, skyMat.m);
 	DrawModel(skybox, skyProgram, "inPosition", NULL, "inTexCoord");
 
-	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void loadCubemap(GLuint &cubemap)
@@ -537,6 +556,9 @@ void updateFBO(FBOstruct *fbo, Camera3D &camera) {
 	// NOTE: debug purposes only
 	drawModelWrapper(T(3,0,-4) * S(martinHeight), martinAABB, martinTex, camera);
 
+	// DRAW ANOTHER MARTIN
+	drawModelWrapper(T(3,0,-4) * S(martinHeight), martin, martinTex, camera);
+
 	// DRAW MIRROR
 	for (size_t i = 0; i < 2; i++)
 	{
@@ -546,7 +568,6 @@ void updateFBO(FBOstruct *fbo, Camera3D &camera) {
 
 void drawMirror(Mirror &mirror, Camera3D &camera)
 {
-
 	mat4 modelToWorld = IdentityMatrix();
 	modelToWorld = modelToWorld * T(mirror.pos.x, mirror.pos.y, mirror.pos.z);
 	modelToWorld = modelToWorld * Rz(mirror.rotation.z);
