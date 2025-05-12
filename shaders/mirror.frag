@@ -38,22 +38,29 @@ void main(void)
 	);
 
 	mat3 rotMat = mat3(1.0) * roll;
-	vec3 distortedNormal = rotMat * fragNormal;
+	// vec3 distortedNormal = rotMat * fragNormal;
 
-	const vec3 boxMin = vec3(-102.0, -2.0, -102.0);
-	const vec3 boxMax = vec3(102.0, 12.0, 102.0);
-
-	// vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
 	// vec3 reflectionDirection = reflect(-cameraDirection, normalize(distortedNormal));
 	// vec3 distortedNormal = vec3(sin(surfacePosition.x), sin(surfacePosition.y), fragNormal.z);
 	// vec3 distortedNormal = vec3(fragNormal.x, sin(surfacePosition.y), fragNormal.z);
 	// rotationMatrix = rotationMatrix * rotMat;
+
 	vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
-	vec3 ray = reflect(-cameraDirection, fragNormal);
-	// vec3 ray = reflect(-cameraDirection, fragNormal);
 	// vec3 ray = reflect(-cameraDirection, normalize(distortedNormal));
+	
+	// When doing normal cubemap reflections.
+	// vec3 ray = reflect(-cameraDirection, fragNormal);
 	// vec3 sampleVector = standard(ray);
+
+	// When doing parallax correction.
+	const vec3 boxMin = vec3(-102.0, -102.0, -102.0);
+	const vec3 boxMax = vec3(102.0, 102.0, 102.0);
+
+	vec3 ray = -cameraDirection;
 	vec3 sampleVector = parallaxCorrected(ray, vec3(surfacePosition), boxMin, boxMax, cubemapPos);
+	sampleVector = reflect(sampleVector, fragNormal);
+
+	// Output color
 	outColor = vec4(texture(mirrorCube, sampleVector).rgb, 1.0);
 }
 
@@ -63,7 +70,6 @@ vec3 standard(vec3 ray) {
 
 vec3 parallaxCorrected(vec3 ray, vec3 pos, vec3 boxMin, vec3 boxMax, vec3 cubemapPos) {
 	// https://forum.derivative.ca/t/parallax-corrected-cubemap-shaders-glsl/299290
-
 	vec3 intersection1 = (boxMax - pos) / ray;
 	vec3 intersection2 = (boxMin - pos) / ray;
 

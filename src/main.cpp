@@ -168,10 +168,12 @@ void init(void)
 	}
 
 	// Set mirror positions and rotations.
-	mirrors[0].pos = {0.0, 5.0, 20.0};
+	mirrors[0].pos = {0.0, 5.0, 10.0};
 	mirrors[0].rotation = {0.0, 0.0, 0.0};
-	mirrors[1].pos = {0.0, 5.0, -20.0};
-	mirrors[1].rotation = {0.0, 0.0, 0.0};
+	mirrors[1].pos = {0.0, 5.0, -10.0};
+	mirrors[1].rotation = {0.0, M_PI, 0.0};
+
+	playerCamera.pos = mirrors[1].pos;
 
 	// Load mirror model
 
@@ -436,7 +438,9 @@ void display(void)
 
 	glutHideCursor();
 	input();
-	
+
+	currentFBO = (currentFBO + 1) % 2;
+
 	// Render mirror perspective
 	for (size_t i = 0; i < 2; i++)
 	{
@@ -579,7 +583,7 @@ void drawMirror(Mirror &mirror, Camera3D &camera)
 	
 	glActiveTexture(GL_TEXTURE0);
 	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[currentFBO]->texid);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[(currentFBO + 1) % 2]->texid);
 	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 	glUniform3f(glGetUniformLocation(mirrorProgram, "cubemapPos"), mirror.pos.x, mirror.pos.y, mirror.pos.z);
@@ -592,7 +596,10 @@ void drawMirror(Mirror &mirror, Camera3D &camera)
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, playerCamera.projectionMatrix);
 
-	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), camera.pos.x, camera.pos.y, camera.pos.z);
+	vec3 position = camera.pos;
+
+	glUniform3f(glGetUniformLocation(mirrorProgram, "cameraPosition"), position.x, position.y, position.z);
+
 	DrawModel(mirrorModel, mirrorProgram, "inPosition", "inNormal", NULL);
 
 	glEnable(GL_CULL_FACE);
