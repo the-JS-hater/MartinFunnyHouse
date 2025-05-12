@@ -9,3 +9,4 @@ Issues we encountered to be used in the report
     - mirrors in front of mirrors not working on Linux for mysterious reasons ?
 - Had to change initFBO to work with cubemaps
 - Cubemaps are just approximations.
+- Parallax correction does not work as I expected.
