@@ -241,24 +241,24 @@ void init(void)
 	
 	GLuint aabb_indices[] = 
 	{
-	  // Bottom face 
-	  0, 2, 1,
-	  0, 3, 2,
+	  // Bottom face
+		0, 3, 2,
+		0, 2, 1,
 	  // Top face
-	  4, 5, 6,
-	  4, 6, 7,
-	  // Front face 
-	  3, 6, 2,
-	  3, 7, 6,
+		4, 7, 6,
+		4, 6, 5,
+	  // Front face
+		0, 4, 1,
+		1, 4, 5,
 	  // Back face
-	  0, 1, 5,
-	  0, 5, 4,
-	  // Left face 
-	  0, 4, 7,
-	  0, 7, 3,
-	  // Right face 
-	  1, 2, 6,
-	  1, 6, 5
+		2, 6, 3,
+		3, 6, 7,
+	  // Left face
+		2, 5, 1,
+		2, 6, 5, 
+	  // Right face
+		0, 4, 7,
+		0, 7, 3
 	};
 	
 	vec3 aabb_normals[] = 
