@@ -582,6 +582,7 @@ void drawMirror(Mirror &mirror, Camera3D &camera)
 	glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[currentFBO]->texid);
 	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
+	glUniform3f(glGetUniformLocation(mirrorProgram, "cubemapPos"), mirror.pos.x, mirror.pos.y, mirror.pos.z);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, bumpmap);
