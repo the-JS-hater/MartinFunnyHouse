@@ -351,7 +351,8 @@ void changeMirrorMode()
 	switch(mirror_mode)
 	{
 		case NORMAL: {
-			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_basic.frag");
+			printf("Active mode: NORMAL\n");
 			break;
 		}
 		case RECURSIVE: {
@@ -363,7 +364,8 @@ void changeMirrorMode()
 			break;
 		}
 		case BUMP_MAP: {
-			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_basic_bumpmap.frag");
+			printf("Active mode: basic bumpmap\n");
 			break;
 		}
 		case BUMP_MAP_NORMALS: {
