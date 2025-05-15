@@ -486,7 +486,7 @@ void display(void)
 	glutHideCursor();
 	input();
 
-	currentFBO = (currentFBO + 1) % 2;
+	// currentFBO = (currentFBO + 1) % 2;
 
 	// Render mirror perspective
 	for (size_t i = 0; i < 2; i++)
@@ -549,7 +549,7 @@ void updateMirror(Mirror &mirror) {
 		{0, -1, 0},
 		{0, -1, 0},
 		{0, -1, 0},
-		{0, 0, -1},
+		{0, 0, 1},
 		{0, 0, 1},
 	};
 	vec3 directions[6] = {
@@ -609,7 +609,7 @@ void updateFBO(FBOstruct *fbo, Camera3D &camera) {
 	drawModelWrapper(T(3,0,-4) * S(martinHeight), martin, martinTex, camera);
 
 	// DRAW MIRROR
-	for (size_t i = 0; i < 2; i++)
+	for (size_t i = 0; i < 1; i++)
 	{
 		drawMirror(mirrors[i], camera);
 	}
