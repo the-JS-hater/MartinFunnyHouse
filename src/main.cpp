@@ -351,6 +351,22 @@ void changeMirrorMode(MIRROR_MODE &mirror_mode)
 			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
 			break;
 		}
+		case RECURSIVE: {
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			break;
+		}
+		case PARALLAX: {
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			break;
+		}
+		case BUMP_MAP: {
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			break;
+		}
+		case BUMP_MAP_NORMALS: {
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			break;
+		}
 		default: {printf("uh oh, houston we have a problem...\n"); break;}
 	}
 };
