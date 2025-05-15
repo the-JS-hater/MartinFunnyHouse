@@ -127,8 +127,10 @@ unsigned currentFBO = 0;
 enum MIRROR_MODE
 {
 	NORMAL,
+	DYNAMIC,
 	RECURSIVE,
 	PARALLAX,
+	RECURSIVE_PARALLAX,
 	BUMP_MAP,
 	BUMP_MAP_NORMALS,
 	WRAP, // if mode == WRAP, set var to 0
@@ -154,7 +156,7 @@ void init(void)
 	program = loadShaders("../shaders/shader.vert", "../shaders/shader.frag");
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
 	
-	mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+	mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_normal.frag");
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "projection"), 1, GL_TRUE, projectionMatrix);
 
 	skyProgram = loadShaders("../shaders/shader.vert", "../shaders/sky.frag");
@@ -191,6 +193,7 @@ void init(void)
 	// Load mirror model
 
 	loadMirror(10.0, 10.0);
+	loadCubemap(cubemap);
 	//mirror->normalArray = bumpModel->normalArray;
 
 	// Load ground model
@@ -354,16 +357,28 @@ void changeMirrorMode(int val)
 	switch(mirror_mode)
 	{
 		case NORMAL: {
-			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_basic.frag");
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_normal.frag");
 			printf("Active mode: NORMAL\n");
 			break;
 		}
+		case DYNAMIC: {
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_basic.frag");
+			printf("Active mode: DYNAMIC\n");
+			break;
+		}
 		case RECURSIVE: {
-			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_basic.frag");
+			printf("Active mode: RECURSIVE\n");
 			break;
 		}
 		case PARALLAX: {
-			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_parallax.frag");
+			printf("Active mode: PARALLAX\n");
+			break;
+		}
+		case RECURSIVE_PARALLAX: {
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_parallax.frag");
+			printf("Active mode: RECURSIVE PARALLAX\n");
 			break;
 		}
 		case BUMP_MAP: {
@@ -373,6 +388,7 @@ void changeMirrorMode(int val)
 		}
 		case BUMP_MAP_NORMALS: {
 			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			printf("Active mode: BUMP MAP NORMALS\n");
 			break;
 		}
 		default: {printf("uh oh, houston we have a problem...\n"); break;}
@@ -500,7 +516,7 @@ void display(void)
 	}
 	
 	// currentFBO = (currentFBO + 1) % 2;
-	++currentFBO %= 2; // Morgans version of above code. MUCH BETTER!
+	if (mirror_mode == RECURSIVE || mirror_mode == RECURSIVE_PARALLAX) ++currentFBO %= 2; // Morgans version of above code. MUCH BETTER!
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
 	
@@ -611,8 +627,12 @@ void updateFBO(FBOstruct *fbo, Camera3D &camera) {
 	// DRAW ANOTHER MARTIN
 	drawModelWrapper(T(3,0,-4) * S(martinHeight), martin, martinTex, camera);
 
+	size_t mirrorCount = 1;
+
+	if (mirror_mode == RECURSIVE || mirror_mode == RECURSIVE_PARALLAX) mirrorCount = 2;
+
 	// DRAW MIRROR
-	for (size_t i = 0; i < 1; i++)
+	for (size_t i = 0; i < mirrorCount; i++)
 	{
 		drawMirror(mirrors[i], camera);
 	}
@@ -630,8 +650,9 @@ void drawMirror(Mirror &mirror, Camera3D &camera)
 	glUseProgram(mirrorProgram);
 	
 	glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[(currentFBO + 1) % 2]->texid);
+	if (mirror_mode == NORMAL) glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+	else if (mirror_mode == RECURSIVE) glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[(currentFBO + 1) % 2]->texid);
+	else glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[currentFBO]->texid);
 	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
 	glUniform3f(glGetUniformLocation(mirrorProgram, "cubemapPos"), mirror.pos.x, mirror.pos.y, mirror.pos.z);
