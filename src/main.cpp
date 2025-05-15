@@ -124,6 +124,19 @@ GLuint bumpmap;
 Mirror mirrors[2];
 int currentFBO = 0;
 
+enum MIRROR_MODE
+{
+	NORMAL,
+	RECURSIVE,
+	PARALLAX,
+	BUMP_MAP,
+	BUMP_MAP_NORMALS,
+	WRAP, // if mode == WRAP, set var to 0
+};
+
+void changeMirrorMode(MIRROR_MODE&);
+MIRROR_MODE mirror_mode = NORMAL;
+
 void init(void)
 {
 	glutPassiveMotionFunc(*updateFocus);
@@ -326,7 +339,21 @@ void input()
 	if (glutKeyIsDown(' ')) {
 		playerCamera.pos += playerCamera.upDir * PLAYER_SPEED;
 	};
-}
+};
+
+
+void changeMirrorMode(MIRROR_MODE &mirror_mode)
+{
+	if (static_cast<MIRROR_MODE>(static_cast<int>(mirror_mode) + 1) >= WRAP) mirror_mode = NORMAL;
+	switch(mirror_mode)
+	{
+		case NORMAL: {
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			break;
+		}
+		default: {printf("uh oh, houston we have a problem...\n"); break;}
+	}
+};
 
 
 void updateFocus(int x, int y)
@@ -446,8 +473,10 @@ void display(void)
 	{
 		updateMirror(mirrors[i]);
 	}
+	
+
 	currentFBO = (currentFBO + 1) % 2;
-	// ++currentFBO %= 2;
+	// ++currentFBO %= 2; // Morgans version of above code. MUCH BETTER!
 	
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
@@ -555,10 +584,6 @@ void updateFBO(FBOstruct *fbo, Camera3D &camera) {
 
 	// DRAW MARTIN
 	drawModelWrapper(matMtW, martin, martinTex, camera);
-
-	// DRAW MARTIN AABB 
-	// NOTE: debug purposes only
-	drawModelWrapper(T(3,0,-4) * S(martinHeight), martinAABB, martinTex, camera);
 
 	// DRAW ANOTHER MARTIN
 	drawModelWrapper(T(3,0,-4) * S(martinHeight), martin, martinTex, camera);
