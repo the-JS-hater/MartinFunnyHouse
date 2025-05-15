@@ -122,7 +122,7 @@ GLuint bumpmap;
 
 // Mirrors
 Mirror mirrors[2];
-int currentFBO = 0;
+unsigned currentFBO = 0;
 
 enum MIRROR_MODE
 {
@@ -134,7 +134,7 @@ enum MIRROR_MODE
 	WRAP, // if mode == WRAP, set var to 0
 };
 
-void changeMirrorMode();
+void changeMirrorMode(int);
 MIRROR_MODE mirror_mode = NORMAL;
 
 void init(void)
@@ -339,15 +339,18 @@ void input()
 	if (glutKeyIsDown(' ')) {
 		playerCamera.pos += playerCamera.upDir * PLAYER_SPEED;
 	};
-	if (glutKeyIsDown('m')) changeMirrorMode();
+	if (glutKeyIsDown('m')) changeMirrorMode(1);
+	if (glutKeyIsDown('n')) changeMirrorMode(-1);
 };
 
 
-void changeMirrorMode()
+void changeMirrorMode(int val)
 {
 	// Forgive me lord, for i have sinned
-	mirror_mode = static_cast<MIRROR_MODE>(static_cast<int>(mirror_mode) + 1);
-	if (mirror_mode >= WRAP) mirror_mode = NORMAL;
+	if (mirror_mode == NORMAL && val < 0) mirror_mode = NORMAL;
+	else mirror_mode = static_cast<MIRROR_MODE>(static_cast<int>(mirror_mode) + val);
+	if (mirror_mode >= WRAP) mirror_mode = static_cast<MIRROR_MODE>(static_cast<int>(WRAP) - 1);
+	
 	switch(mirror_mode)
 	{
 		case NORMAL: {
@@ -496,10 +499,8 @@ void display(void)
 		updateMirror(mirrors[i]);
 	}
 	
-
-	currentFBO = (currentFBO + 1) % 2;
-	// ++currentFBO %= 2; // Morgans version of above code. MUCH BETTER!
-	
+	// currentFBO = (currentFBO + 1) % 2;
+	++currentFBO %= 2; // Morgans version of above code. MUCH BETTER!
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
 	
