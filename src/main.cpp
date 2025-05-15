@@ -134,7 +134,7 @@ enum MIRROR_MODE
 	WRAP, // if mode == WRAP, set var to 0
 };
 
-void changeMirrorMode(MIRROR_MODE&);
+void changeMirrorMode();
 MIRROR_MODE mirror_mode = NORMAL;
 
 void init(void)
@@ -339,12 +339,15 @@ void input()
 	if (glutKeyIsDown(' ')) {
 		playerCamera.pos += playerCamera.upDir * PLAYER_SPEED;
 	};
+	if (glutKeyIsDown('m')) changeMirrorMode();
 };
 
 
-void changeMirrorMode(MIRROR_MODE &mirror_mode)
+void changeMirrorMode()
 {
-	if (static_cast<MIRROR_MODE>(static_cast<int>(mirror_mode) + 1) >= WRAP) mirror_mode = NORMAL;
+	// Forgive me lord, for i have sinned
+	mirror_mode = static_cast<MIRROR_MODE>(static_cast<int>(mirror_mode) + 1);
+	if (mirror_mode >= WRAP) mirror_mode = NORMAL;
 	switch(mirror_mode)
 	{
 		case NORMAL: {
@@ -369,6 +372,7 @@ void changeMirrorMode(MIRROR_MODE &mirror_mode)
 		}
 		default: {printf("uh oh, houston we have a problem...\n"); break;}
 	}
+	printf("Current mirror mode: %d\n", static_cast<int>(mirror_mode));
 };
 
 
