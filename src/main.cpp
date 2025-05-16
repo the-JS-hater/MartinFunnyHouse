@@ -183,13 +183,11 @@ void init(void)
 		mirrors[i].fbo[1] = initCubemapFBO(2048, 2048, 0);
 	}
 
-	// Set mirror positions and rotations.
+	// Set mirror positions, up vectors and rotations.
 	mirrors[0].pos = {0.0, 5.0, 10.0};
 	mirrors[0].rotation = {0.0, 0.0, 0.0};
 	mirrors[1].pos = {0.0, 5.0, -10.0};
 	mirrors[1].rotation = {0.0, M_PI, 0.0};
-
-	playerCamera.pos = mirrors[1].pos;
 
 	// Load mirror model
 
@@ -344,18 +342,16 @@ void input()
 		playerCamera.pos += playerCamera.upDir * PLAYER_SPEED;
 	};
 	//DEMO FUNCTIONALITY 
-	if (mirrorChanged) {
-		mirrorChanged = false;
-		return;
-	}
 	if (glutKeyIsDown('m')) {
-		changeMirrorMode(1);
+		if (!mirrorChanged) changeMirrorMode(1);
 		mirrorChanged = true;
 	} 
-	if (glutKeyIsDown('n')) {
-		changeMirrorMode(-1);
+	else if (glutKeyIsDown('n')) {
+		if (!mirrorChanged) changeMirrorMode(-1);
 		mirrorChanged = true;
-	} 
+	} else {
+		mirrorChanged = false;
+	}
 };
 
 
@@ -399,7 +395,7 @@ void changeMirrorMode(int val)
 			break;
 		}
 		case BUMP_MAP_NORMALS: {
-			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror.frag");
+			mirrorProgram = loadShaders("../shaders/mirror.vert", "../shaders/mirror_basic.frag");
 			printf("Active mode: BUMP MAP NORMALS\n");
 			break;
 		}
@@ -520,6 +516,8 @@ void display(void)
 	input();
 
 	// currentFBO = (currentFBO + 1) % 2;
+	// currentFBO = (currentFBO + 1) % 2;
+	if (mirror_mode == RECURSIVE || mirror_mode == RECURSIVE_PARALLAX) ++currentFBO %= 2; // Morgans version of above code. MUCH BETTER!
 
 	// Render mirror perspective
 	for (size_t i = 0; i < 2; i++)
@@ -527,8 +525,6 @@ void display(void)
 		updateMirror(mirrors[i]);
 	}
 	
-	// currentFBO = (currentFBO + 1) % 2;
-	if (mirror_mode == RECURSIVE || mirror_mode == RECURSIVE_PARALLAX) ++currentFBO %= 2; // Morgans version of above code. MUCH BETTER!
 	// Render Martin's perspective
 	updateFBO(0, playerCamera);
 	
@@ -572,22 +568,22 @@ void updateMirror(Mirror &mirror) {
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
 		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
 	};
 	vec3 upVectors[6] = {
-		{0, -1, 0},
-		{0, -1, 0},
-		{0, -1, 0},
-		{0, -1, 0},
+		{0, 1, 0},
+		{0, 1, 0},
+		{0, 1, 0},
+		{0, 1, 0},
 		{0, 0, 1},
 		{0, 0, 1},
 	};
 	vec3 directions[6] = {
 		{1, 0, 0},
 		{-1, 0, 0},
-		{0, 0, 1},
 		{0, 0, -1},
+		{0, 0, 1},
 		{0, 1, 0},
 		{0, -1, 0},
 	};
@@ -595,7 +591,9 @@ void updateMirror(Mirror &mirror) {
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cubeSides[i], mirror.fbo[currentFBO]->texid, 0);
 		CHECK_FRAMEBUFFER_STATUS();
-		
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		Camera3D mirrorCamera = Camera3D(
 			mirror.pos,
 			directions[i],
@@ -663,7 +661,7 @@ void drawMirror(Mirror &mirror, Camera3D &camera)
 	
 	glActiveTexture(GL_TEXTURE0);
 	if (mirror_mode == NORMAL) glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
-	else if (mirror_mode == RECURSIVE) glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[(currentFBO + 1) % 2]->texid);
+	else if (mirror_mode == RECURSIVE || mirror_mode == RECURSIVE_PARALLAX) glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[(currentFBO + 1) % 2]->texid);
 	else glBindTexture(GL_TEXTURE_CUBE_MAP, mirror.fbo[currentFBO]->texid);
 	// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 	glUniform1i(glGetUniformLocation(mirrorProgram, "mirrorCube"), 0);
@@ -675,7 +673,7 @@ void drawMirror(Mirror &mirror, Camera3D &camera)
 
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "modelToWorld"), 1, GL_TRUE, modelToWorld.m);
 	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "worldToView"), 1, GL_TRUE, cameraMatrix.m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, playerCamera.projectionMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(mirrorProgram, "projection"), 1, GL_TRUE, camera.projectionMatrix);
 
 	vec3 position = camera.pos;
 

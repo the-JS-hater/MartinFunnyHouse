@@ -16,15 +16,14 @@ vec3 standard(vec3);
 
 void main(void)
 {
-	const vec3 boxMin = vec3(-102.0, -102.0, -102.0) + cubemapPos;
-	const vec3 boxMax = vec3(102.0, 102.0, 102.0) + cubemapPos;
+	vec3 boxMin = vec3(-102.0, -102.0, -102.0) + cubemapPos;
+	vec3 boxMax = vec3(102.0, 102.0, 102.0) + cubemapPos;
+
 
 	vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
-	// vec3 ray = reflect(vec3(-cameraDirection.x, cameraDirection.y, -cameraDirection.z), fragNormal);
-	vec3 ray = cameraDirection;
+	cameraDirection = vec3(-cameraDirection.x, cameraDirection.y, cameraDirection.z);
+	vec3 ray = reflect(cameraDirection, normalize(fragNormal));
 	vec3 sampleVector = parallaxCorrected(ray, vec3(surfacePosition), boxMin, boxMax, cubemapPos);
-	// vec3 sampleVector = standard(ray);
-	// sampleVector = reflect(sampleVector, fragNormal);
 
 	outColor = vec4(texture(mirrorCube, sampleVector).rgb, 1.0);
 }
@@ -46,5 +45,5 @@ vec3 parallaxCorrected(vec3 ray, vec3 pos, vec3 boxMin, vec3 boxMax, vec3 cubema
 
 	vec3 sampleVector = intersectedPosition - cubemapPos;
 
-	return vec3(sampleVector.x, sampleVector.y, sampleVector.z);
+	return vec3(sampleVector.x, -sampleVector.y, sampleVector.z);
 }

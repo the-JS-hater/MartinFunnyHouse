@@ -16,12 +16,12 @@ vec3 standard(vec3);
 void main(void)
 {
 	vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
-	vec3 ray = reflect(-cameraDirection, fragNormal);
+	vec3 ray = reflect(cameraDirection, normalize(fragNormal));
 	vec3 sampleVector = standard(ray);
 
 	outColor = vec4(texture(mirrorCube, sampleVector).rgb, 1.0);
 }
 
 vec3 standard(vec3 ray) {
-	return vec3(ray.x, -ray.y, ray.z);
+	return vec3(-ray.x, -ray.y, ray.z);
 }

@@ -40,7 +40,7 @@ void main(void)
 
 	vec3 distortedNormal = vec3(fragNormal.x, sin(surfacePosition.y), fragNormal.z);
 
-	vec3 ray = reflect(-cameraDirection, normalize(distortedNormal));
+	vec3 ray = reflect(cameraDirection, normalize(distortedNormal));
 	vec3 sampleVector = standard(ray);
 
 	// Output color

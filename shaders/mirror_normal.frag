@@ -23,5 +23,5 @@ void main(void)
 }
 
 vec3 standard(vec3 ray) {
-	return vec3(ray.x, -ray.y, -ray.z);
+	return vec3(ray.x, -ray.y, ray.z);
 }
