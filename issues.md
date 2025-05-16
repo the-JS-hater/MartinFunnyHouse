@@ -10,3 +10,4 @@ Issues we encountered to be used in the report
 - Had to change initFBO to work with cubemaps
 - Cubemaps are just approximations.
 - Parallax correction does not work as I expected.
+- Accidentally having down facing up vectors when creating the dynamic cubemap leading to weird issues. 
