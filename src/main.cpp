@@ -138,6 +138,7 @@ enum MIRROR_MODE
 
 void changeMirrorMode(int);
 MIRROR_MODE mirror_mode = NORMAL;
+bool mirrorChanged = false;
 
 void init(void)
 {
@@ -342,8 +343,19 @@ void input()
 	if (glutKeyIsDown(' ')) {
 		playerCamera.pos += playerCamera.upDir * PLAYER_SPEED;
 	};
-	if (glutKeyIsDown('m')) changeMirrorMode(1);
-	if (glutKeyIsDown('n')) changeMirrorMode(-1);
+	//DEMO FUNCTIONALITY 
+	if (mirrorChanged) {
+		mirrorChanged = false;
+		return;
+	}
+	if (glutKeyIsDown('m')) {
+		changeMirrorMode(1);
+		mirrorChanged = true;
+	} 
+	if (glutKeyIsDown('n')) {
+		changeMirrorMode(-1);
+		mirrorChanged = true;
+	} 
 };
 
 
