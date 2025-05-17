@@ -85,7 +85,7 @@ Camera3D playerCamera = Camera3D(
 	projectionMatrix
 );
 
-// Cubemap testing files
+// Prerendered cubemap
 const char *textureFileName[12] =
 	{
 		"../textures/cubemap_test/skyrender0004.tga",
@@ -190,7 +190,6 @@ void init(void)
 	mirrors[1].rotation = {0.0, M_PI, 0.0};
 
 	// Load mirror model
-
 	loadMirror(10.0, 10.0);
 	loadCubemap(cubemap);
 	//mirror->normalArray = bumpModel->normalArray;
@@ -537,15 +536,15 @@ void loadMirror(float width, float height) {
 		{
 			vec3(-width / 2.0f, -height / 2.0f, 0.0f),
 			vec3(-width / 2.0f, height / 2.0f, 0.0f),
-			vec3(width / 2.0f, -height / 2.0f, -0.0f),
-			vec3(width / 2.0f, height / 2.0f, -0.0f)
+			vec3(width / 2.0f, -height / 2.0f, 0.0f),
+			vec3(width / 2.0f, height / 2.0f, 0.0f)
 		};
 	vec3 vertexNormals[] =
 		{
-			vec3(1.0f, 0.0f, 0.0f),
-			vec3(1.0f, 0.0f, 0.0f),
-			vec3(1.0f, 0.0f, 0.0f),
-			vec3(1.0f, 0.0f, 0.0f)
+			vec3(0.0f, 0.0f, 1.0f),
+			vec3(0.0f, 0.0f, 1.0f),
+			vec3(0.0f, 0.0f, 1.0f),
+			vec3(0.0f, 0.0f, 1.0f)
 		};
 	GLuint indices[] = {0, 1, 2, 1, 3, 2};
 

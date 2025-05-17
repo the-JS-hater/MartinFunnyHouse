@@ -21,7 +21,7 @@ void main(void)
 
 
 	vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
-	cameraDirection = vec3(-cameraDirection.x, cameraDirection.y, cameraDirection.z);
+	cameraDirection = vec3(cameraDirection.x, cameraDirection.y, -cameraDirection.z);
 	vec3 ray = reflect(cameraDirection, normalize(fragNormal));
 	vec3 sampleVector = parallaxCorrected(ray, vec3(surfacePosition), boxMin, boxMax, cubemapPos);
 

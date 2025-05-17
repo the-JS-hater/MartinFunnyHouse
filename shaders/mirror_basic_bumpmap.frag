@@ -35,10 +35,10 @@ void main(void)
 		0.0, -sin(t), cos(t)
 	);
 
-	mat3 rotMat = mat3(1.0) * yaw * pitch;
+	mat3 rotMat = mat3(1.0) * roll * pitch;
 	vec3 cameraDirection = vec3(normalize(surfacePosition.xyz - cameraPosition));
 
-	vec3 distortedNormal = vec3(fragNormal.x, sin(surfacePosition.y), fragNormal.z);
+	vec3 distortedNormal = vec3(fragNormal.z, sin(surfacePosition.y), fragNormal.x);
 
 	vec3 ray = reflect(cameraDirection, normalize(distortedNormal));
 	vec3 sampleVector = standard(ray);
