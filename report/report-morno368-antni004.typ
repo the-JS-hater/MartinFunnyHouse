@@ -8,12 +8,12 @@
 
 // TODO: resize images
 
-= Cubemap Mirrors 
+= Cubemap Mirrors
+// TODO: style the head title & authors part
 Anton Nilsson & Morgan Nordberg
 
 
 == Introduction
-
 // Describe the problem, basically the specification you started from. What
 // features were mandatory and optional?
 The project goal was to create a 3D scene, where the "player" can walk around
@@ -71,11 +71,12 @@ very apparent distortions in perspective in the mirror. The first problem is
 solved by using dynamic cubemaps, and the latter problem is solved by parralax
 correction. Both of this techniques are covered later in the report.
 
-// maybe use #figure() instead ?
-#image("prerendered_cubemap.png")
+#figure(
+  image("prerendered_cubemap.png", width: 80%),
+  caption: [Basic cubemap: Ground and player not rendered]
+)
 
 === Dynamic cubemap
-//TODO: include a screenshot
 Dynamic cubemaps work by giving each mirror it's own FBO, that contains a
 cubemap texture, and then letting the mirror render the scene in all directions
 from it's own perspective and writing the result to it's associated FBO:s
@@ -84,8 +85,10 @@ of the mirrors surface as desciped in the basic cubemap chapter. This does not
 solve for the issue of distorted perspective, but this does mean that various
 models and changes in the scene will be visible in the mirrors reflections.
 
-// maybe use #figure() instead ?
-#image("dynamic_cubemap.png")
+#figure(
+  image("dynamic_cubemap.png", width: 80%),
+  caption: [Dynamic cubemap]
+)
 
 === basic bumpmap
 // TODO: image/graphic to explain "internal bounces"
@@ -96,17 +99,27 @@ technique is that if the bumps in the mirror would create internal bounces,
 this will not happen since the mirror has no actual geometry besides being a
 flat plane as far as the reflections are concerned.
 
-// maybe use #figure() instead ?
-#image("bumpmap.png")
+#figure(
+  image("bumpmap.png", width: 80%),
+  caption: [Normal vectors distorted]
+)
 
 === parallax correction
-// TODO: fill this in
+// TODO: Write the actual body
 
-// maybe use #figure() instead ?
-// almost definitley !
-// ALSO, maybe put side-by-side
-#image("cubemap_error.png")
-#image("cubemap_corrected.png")
+// for Anton: refer by doing @parallax-comparison
+#figure(
+  grid(
+    columns: 2,
+    [
+      #image("cubemap_error.png", width: 90%)
+    ],
+    [
+      #image("cubemap_corrected.png", width: 90%)
+    ]
+  ),
+  caption: [Comparison of non-parallax corrected mirror on the left to parallax corrected mirror on the right]
+) <parallax-comparison>
 
 
 === recursive mirrors
