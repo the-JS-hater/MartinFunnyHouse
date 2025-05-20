@@ -6,6 +6,8 @@
 // am counting contents. Use figures, it is a graphics course and screenshots are
 // easy to make. Typical structure:
 
+// TODO: resize images
+
 = Cubemap Mirrors 
 Anton Nilsson & Morgan Nordberg
 
@@ -55,7 +57,6 @@ We used no additional dependencies besides those provided for the lab
 assignments. We did howerver use openGL 4.6 in our shaders. // reason ?
 
 === basic cubemap
-// TODO: include a screenshot
 In openGL there is a built-in type for dealing with cubemap textures in a
 shader called "samplerCube". So in the shader you pass a uniform samplerCube,
 and a directional vector from the observers position to the mirrors surface,
@@ -70,6 +71,9 @@ very apparent distortions in perspective in the mirror. The first problem is
 solved by using dynamic cubemaps, and the latter problem is solved by parralax
 correction. Both of this techniques are covered later in the report.
 
+// maybe use #figure() instead ?
+#image("prerendered_cubemap.png")
+
 === Dynamic cubemap
 //TODO: include a screenshot
 Dynamic cubemaps work by giving each mirror it's own FBO, that contains a
@@ -80,9 +84,11 @@ of the mirrors surface as desciped in the basic cubemap chapter. This does not
 solve for the issue of distorted perspective, but this does mean that various
 models and changes in the scene will be visible in the mirrors reflections.
 
+// maybe use #figure() instead ?
+#image("dynamic_cubemap.png")
+
 === basic bumpmap
-//TODO: include a screenshot
-// also image/graphic to explain "internal bounces"
+// TODO: image/graphic to explain "internal bounces"
 By using simple sinus functions with surface position data as input we can
 distort the normal vectors on the surface of the mirror to create fun affects
 like those found in "fun houses" at amusement parks. The limitation of this
@@ -90,11 +96,20 @@ technique is that if the bumps in the mirror would create internal bounces,
 this will not happen since the mirror has no actual geometry besides being a
 flat plane as far as the reflections are concerned.
 
+// maybe use #figure() instead ?
+#image("bumpmap.png")
+
 === parallax correction
-// TODO fill this in
+// TODO: fill this in
+
+// maybe use #figure() instead ?
+// almost definitley !
+// ALSO, maybe put side-by-side
+#image("cubemap_error.png")
+#image("cubemap_corrected.png")
+
 
 === recursive mirrors
-//TODO: include a screenshot
 To solve the issue of multiple mirrors, using dynamic cubemaps, being able to
 see each other we used a recursive method. The idea is that each mirror has 2
 FBO:s. And on alternating frames they will switch between which they read from,
@@ -103,6 +118,12 @@ mirror. This does cause a slight lag in the mirror reflection when reaction to
 movement since there will take several frames for the changes to propagate
 through the mirrors seeing each other.
 
+// maybe use #figure() instead ?
+// almost definitley !
+#image("recursive_mirror.png")
+#image("parallax_recursive.png")
+
+
 == Interesting problems
 // Maybe remove this article, highlighted interessting probkems with each
 // technique. Could howver use this to compile and summarize the issues.md doc ?
@@ -110,7 +131,7 @@ through the mirrors seeing each other.
 // Did you run into any particular problems during the work?
 
 == Conclusions
-// not gonna lie, not sure what to put here
+// WARN: not gonna lie, not sure what to put here
 
 // How did it come out? How could it have been done better?
 Overall, pretty much all of the techniques had various drawbacks, and were
@@ -126,6 +147,7 @@ There might be cases where these techniques are cheap and work well for flat
 reflective surfaces like still water, but for accurate mirrors it seems
 raytracing would be more worthwile.
 
-== Source-code must be supplied, preferrably in
-electronic form. Links to git
-Open github repo: //TODO, add link (USING EPIC TYPST FEATURES!)
+== Source-code 
+#show link: underline
+Open github repo: #link("https://github.com/the-JS-hater/MartinFunnyHouse")
+
