@@ -137,7 +137,7 @@ The intersection point with the AABB is then given by the minimum of these three
       #image("images/cubemap_corrected.png", width: 95%)
     ],
   ),
-  caption: [Parallax corrected cubemap on the left; normal cubemap on the right.],
+  caption: [Normal cubemap on the left; parallax corrected cubemap on the right.],
 ) <parallax-comparison>
 
 
